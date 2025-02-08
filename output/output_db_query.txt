@@ -1,0 +1,28 @@
+Original Input: give me papers on covid
+
+Similar Chunks:
+Similarity: 0.7406
+Text: Authors of COVID-19 papers produced during the pandemic were overwhelmingly
+not subject matter experts. Such a massive inflow of scholars from different
+expertise areas is both an asset and a potential problem. Domain-informed
+scientific collaboration is the key to preparing for future crises.
+
+Similarity: 0.7344
+Text: This study examines the impact of the COVID-19 pandemic on
+information-seeking behaviors among international students, with a focus on the
+r/f1visa subreddit. Our study indicates a considerable rise in the number of
+users posting more than one question during the pandemic. Those asking
+recurring questions demonstrate more active involvement in communication,
+suggesting a continuous pursuit of knowledge. Furthermore, the thematic focus
+has shifted from questions about jobs before COVID-19 to concerns about
+finances, school preparations, and taxes during COVID-19. These findings carry
+implications for support policymaking, highlighting the importance of
+delivering timely and relevant information to meet the evolving needs of
+international students. To enhance international students' understanding and
+navigation of this dynamic environment, future research in this field is
+necessary.
+
+Similarity: 0.7321
+Text: This report reviews knowledge of the tranmission of COVID-19 indoors, reviews
+mitigating measures, and considers the implications for winter 2020.
+

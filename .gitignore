@@ -1,7 +1,14 @@
+# data
+data/
+*.json
+*.csv
+*.pkl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+*.ipynb
 
 # C extensions
 *.so
