@@ -1,7 +1,6 @@
-dotenv
+python-dotenv
 kaggle
 kagglehub
-json
 numpy
 pandas
 scikit-learn
