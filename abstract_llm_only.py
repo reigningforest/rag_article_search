@@ -1,22 +1,20 @@
 import os
 from dotenv import load_dotenv
+import yaml
 
 from langchain_openai import ChatOpenAI
 
 
-def get_env():
+def get_env(env_file):
     '''Load environment variables'''
     current_file_dir = os.path.abspath(os.path.dirname(__file__))
-    env_path = os.path.join(current_file_dir, '.env')
+    env_path = os.path.join(current_file_dir, env_file)
     load_dotenv(dotenv_path=env_path)
 
 
-def loading():
-    # Load the environment variables
-    get_env()
-
+def loading(llm_model_name):
     # Create LLM
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo")
+    llm = ChatOpenAI(model_name=llm_model_name)
     print('LLM loaded')
     return llm
 
@@ -28,11 +26,17 @@ def query_llm(llm, query_str):
 
 
 def main():
+    # Load the config variables
+    with open('config.yaml', 'r') as file:
+        config = yaml.safe_load(file)
+
     # Load the environment variables
-    get_env()
+    env_file = config['env_file']
+    get_env(env_file)
 
     # Create LLM
-    llm = loading()
+    llm_model_name = config['llm_model_name']
+    llm = loading(llm_model_name)
 
     # Query the LLM
     print("Enter 'exit' to quit the program.")

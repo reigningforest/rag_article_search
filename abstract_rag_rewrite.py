@@ -6,6 +6,7 @@ tf.get_logger().setLevel('ERROR')
 
 import pandas as pd
 from dotenv import load_dotenv
+import yaml
 from pinecone import Pinecone
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
@@ -14,35 +15,34 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableLambda
 from langchain_core.prompts import ChatPromptTemplate
 
-def get_env():
+
+def get_env(env_file):
     '''Load environment variables'''
     current_file_dir = os.path.abspath(os.path.dirname(__file__))
-    env_path = os.path.join(current_file_dir, '.env')
+    env_path = os.path.join(current_file_dir, env_file)
     load_dotenv(dotenv_path=env_path)
 
-def loading(index_name):
-    # Load the environment variables
-    get_env()
 
+def loading(pc_index, chunk_file_name, llm_model_name, fast_embed_name, data_dir):
     # Get the data directory
     current_file_dir = os.path.abspath(os.path.dirname(__file__))
-    data_dir = os.path.join(current_file_dir, 'data')
+    data_dir = os.path.join(current_file_dir, data_dir)
 
     # Load the data chunks(splits)
-    splits = pd.read_pickle(os.path.join(data_dir, 'chunked_abstracts.pkl'))
+    splits = pd.read_pickle(os.path.join(data_dir, chunk_file_name))
 
     # Load the Pinecone index
     pinecone = Pinecone()
-    index = pinecone.Index(index_name)
+    index = pinecone.Index(pc_index)
     print('Index loaded')
 
     # Create LLM
-    llm = ChatOpenAI(model="gpt-3.5-turbo")
+    llm = ChatOpenAI(model=llm_model_name)
     print('LLM loaded')
 
     # Load the embedder
     embedder = HuggingFaceEmbeddings(
-        model_name="BAAI/bge-small-en-v1.5",
+        model_name=fast_embed_name,
         model_kwargs={'device': 'cuda'},
         encode_kwargs={'normalize_embeddings': True}
     )
@@ -50,7 +50,8 @@ def loading(index_name):
 
     return splits, index, llm, embedder
 
-def query_rag_rewrite(query_str, splits, index, llm, embedder, top_k=10):
+
+def query_rag_rewrite(query_str, splits, index, llm, embedder, top_k):
     '''Query the RAG model with a given question'''
     # 1. Define rewrite chain outside retrieval
     rewrite_prompt = ChatPromptTemplate.from_template(
@@ -132,20 +133,31 @@ def query_rag_rewrite(query_str, splits, index, llm, embedder, top_k=10):
     return answer
 
 def main():
-    index_name = "abstract-index"
+    # Load the config file
+    with open('config.yaml', 'r') as file:
+        config = yaml.safe_load(file)
 
     # Load the environment variables
-    get_env()
+    env_file = config['env_file']
+    get_env(env_file)
 
     # Load the splits, index, llm, and embedder
-    splits, index, llm, embedder = loading(index_name)
+    pc_index = config['pc_index']
+    chunk_file_name = config['chunk_file_name']
+    llm_model_name = config['llm_model_name']
+    fast_embed_name = config['fast_embed_name']
+    data_dir = config['data_dir']
+    splits, index, llm, embedder = loading(pc_index, chunk_file_name, llm_model_name, fast_embed_name, data_dir)
 
+    # Set the top_k value
+    top_k = config['top_k']
+    
     print("Enter 'exit' to quit the program.")
     while True:
         query_str = input("Enter a question: ")
         if query_str == "exit":
             break
-        answer = query_rag_rewrite(query_str, splits, index, llm, embedder)
+        answer = query_rag_rewrite(query_str, splits, index, llm, embedder, top_k)
         print(answer)
         # print(context_chunks)
 

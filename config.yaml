@@ -1,0 +1,47 @@
+# Directory Names
+data_dir: "data"
+output_dir: "output"
+dataset_kaggle: "Cornell-University/arxiv"
+
+# File Names
+env_file: ".env"
+dl_file_name: "arxiv-metadata-oai-snapshot.json"
+filter_file_name: "filtered_abstracts.pkl"
+chunk_file_name: "chunked_abstracts.pkl"
+embeddings_file_name: "embeddings_final.npy"
+prompt_file_name: "prompts.txt"
+
+# Output file names
+output_db_query_file_name: "output_db_query.txt"
+output_llm_file_name: "output_llm.txt"
+output_rag_simple_file_name: "output_rag_simple.txt"
+output_rag_classifier_file_name: "output_rag_classifier.txt"
+output_rag_rewrite_file_name: "output_rag_rewrite.txt"
+output_rag_2_adv_file_name: "output_rag_2_adv.txt"
+output_combined_file_name: "output_responses.csv"
+
+# Filtering Variables
+date: "2021-10-01"
+
+# Chunking Variables
+chunk_size: 2000
+chunk_overlap: 200
+min_text_len: 50
+
+# Embedding Variables
+fast_embed_name: "BAAI/bge-small-en-v1.5"
+ch_batch_size: 256
+save_every: 40000
+save_checkpoints: False
+
+# Upserting Variables
+pc_index: "abstract-index"
+distance_metric: "cosine"
+pc_batch_size: 500
+pc_cloud: "aws"
+pc_region: "us-east-1"
+
+# RAG Variables
+llm_model_name: "gpt-3.5-turbo"
+top_k: 10
+sup_print: True

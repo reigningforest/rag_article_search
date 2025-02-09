@@ -2,11 +2,30 @@
 
 
 ## Data Location
-The data is the **[arXiv Dataset in Kaggle](https://www.kaggle.com/datasets/Cornell-University/arxiv)**:
+The data is the **[arXiv Dataset in Kaggle](https://www.kaggle.com/datasets/Cornell-University/arxiv)**.
+
+The code will automatically download this for you.
 
 ## Prerequisites
 ### Python download
 Ensure you have **[Python](https://www.python.org/downloads/)** installed on your system.
+
+### Virtual Environment Setup
+You can set up a virtual environment to manage packages. Here, I am using **[Anaconda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)**
+1. create a virtual environment.
+    ```
+    conda create -n rag
+    ```
+2. Next, activate.
+    ```
+    conda activate rag
+    ```
+3. Install Pip
+    ```
+    conda intall pip
+    ```
+
+Finally, install packages.
 
 ### Package Installation
 Install required dependencies by running in terminal:
@@ -15,8 +34,9 @@ pip install -r requirements.txt
 ```
 NOTE: The `kaggle` and `kagglehub` packages are required for downloading the data.
 
-For optimal GPU acceleration, install the CUDA-enabled version of ONNX Runtime:
+Please ensure that you have CUDA 12 installed on your system. You may need to run the below to allow NVIDIA GPU usage.
 ```
+pip uninstall onnxruntime onnxruntime-gpu
 pip install onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
 ```
 Make sure you install based off of your CUDA version. More info **[here](https://onnxruntime.ai/docs/install/)**.
@@ -40,9 +60,9 @@ python example.py
 ```
 
 Please note that you should only use:
-1. A Data folder to store and retrieve data (e.g., `data`)
+1. A `data` folder to store and retrieve data.
     - This will be input.
-2. A Output folder to store outputs (e.g., `output`)
+2. An `output` folder to store outputs.
     - This is automatically generated.
 
 ## Usage

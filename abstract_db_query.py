@@ -8,36 +8,37 @@ from pinecone import Pinecone
 import pandas as pd
 from langchain_huggingface import HuggingFaceEmbeddings
 from dotenv import load_dotenv
+import yaml
 
 
-def get_env():
+def get_env(env_file):
     '''Load environment variables'''
     current_file_dir = os.path.abspath(os.path.dirname(__file__))
-    env_path = os.path.join(current_file_dir, '.env')
+    env_path = os.path.join(current_file_dir, env_file)
     load_dotenv(dotenv_path=env_path)
 
 
-def loading(folder_name, index_name='abstract-index'):
+def loading(data_dir, pc_index, chunk_file_name, fast_embed_name):
     '''
     Load the data, index and embedder
     '''
     print("Loading started...")
     # Load the data directory
     current_file_dir = os.path.abspath(os.path.dirname(__file__))
-    data_dir = os.path.join(current_file_dir, folder_name)
+    data_dir_path = os.path.join(current_file_dir, data_dir)
 
     # Load the data chunks(splits)
-    splits = pd.read_pickle(os.path.join(data_dir, 'chunked_abstracts.pkl'))
+    splits = pd.read_pickle(os.path.join(data_dir_path, chunk_file_name))
     print('- Chunks loaded')
 
     # Load the Pinecone index
     pinecone = Pinecone()
-    index = pinecone.Index(index_name)
+    index = pinecone.Index(pc_index)
     print('- Index loaded')
 
     # Load the embedder
     embedder = HuggingFaceEmbeddings(
-        model_name="BAAI/bge-small-en-v1.5",
+        model_name=fast_embed_name,
         model_kwargs={'device': 'cuda'},
         encode_kwargs={'normalize_embeddings': True}
     )
@@ -47,12 +48,12 @@ def loading(folder_name, index_name='abstract-index'):
 
     return current_file_dir, splits, index, embedder
 
-def retrieve_docs(current_file_dir, query_str, embedder, index, splits, top_k=3):
+def retrieve_docs(current_file_dir, query_str, embedder, index, splits, top_k, output_dir, output_db_query_file_name):
     '''
     Embeds the query and retrieves the top-k similar chunks
     '''
     # if the output folder doesn't exist, create it
-    output_path = os.path.join(current_file_dir, 'output')
+    output_path = os.path.join(current_file_dir, output_dir)
     os.makedirs(output_path, exist_ok=True)
 
     # Embed the query
@@ -71,7 +72,7 @@ def retrieve_docs(current_file_dir, query_str, embedder, index, splits, top_k=3)
     selected_chunks = splits.iloc[chunk_ids]
 
     # Save original question and similar chunks to a file
-    with open(os.path.join(output_path, 'output_db_query.txt'), 'w') as f:
+    with open(os.path.join(output_path, output_db_query_file_name), 'w') as f:
         f.write(f"Original Input: {query_str}\n\n")
         f.write("Similar Chunks:\n")
         for match in results.matches:
@@ -80,19 +81,33 @@ def retrieve_docs(current_file_dir, query_str, embedder, index, splits, top_k=3)
             f.write(f"Text: {selected_chunks.loc[idx]['chunk_text']}\n\n")
     print(f"Saved similar chunks to 'output_db_query.txt'")
 
-def main(folder_name, query_str):
+def main():
+    # Text query input
+    query_str = input('Enter the text query: ')
+    query_top_k = input('Enter the number of similar chunks to retrieve: ')
+
+    # Load in config variables
+    with open('config.yaml', 'r') as file:
+        config = yaml.safe_load(file)
+
     # Load environment variables
-    get_env()
+    env_file = config['env_file']
+    get_env(env_file)
 
     # Load everything
-    current_file_dir, splits, index, embedder = loading(folder_name)
+    data_dir = config['data_dir']
+    pc_index = config['pc_index']
+    chunk_file_name = config['chunk_file_name']
+    fast_embed_name = config['fast_embed_name']
+    current_file_dir, splits, index, embedder = loading(data_dir, pc_index, chunk_file_name, fast_embed_name)
 
     # Retrieve docs
-    retrieve_docs(current_file_dir, query_str, embedder, index, splits, top_k=3)
+    output_dir = config['output_dir']
+    output_db_query_file_name = config['output_db_query_file_name']
+    query_top_k = int(query_top_k)
+    retrieve_docs(current_file_dir, query_str, embedder, index, splits, query_top_k, output_dir, output_db_query_file_name)
 
 
 if __name__ == '__main__':
-    query_str = input('Enter the query: ')
-
-    main('data', query_str)
+    main()
 
