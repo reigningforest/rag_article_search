@@ -84,6 +84,10 @@ def main():
     output_dir = config['output_dir']
     output_dir_path = os.path.join(current_file_dir, output_dir)
 
+    # Create the output directory if it does not exist
+    if not os.path.exists(output_dir_path):
+        os.makedirs(output_dir_path)
+
     # Process the prompts
     prompt_file_name = config['prompt_file_name']
     with open(os.path.join(current_file_dir, prompt_file_name), 'r') as f:
