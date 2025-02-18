@@ -14,7 +14,7 @@ Ensure you have **[Python](https://www.python.org/downloads/)** installed on you
 You can set up a virtual environment to manage packages. Here, I am using **[Anaconda](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)**
 1. create a virtual environment.
     ```
-    conda create -n rag
+    conda create -n rag python=3.11.11
     ```
 2. Next, activate.
     ```
@@ -22,7 +22,7 @@ You can set up a virtual environment to manage packages. Here, I am using **[Ana
     ```
 3. Install Pip
     ```
-    conda intall pip
+    conda install pip
     ```
 
 Finally, install packages.
