@@ -11,13 +11,6 @@ from dotenv import load_dotenv
 import yaml
 
 
-def get_env(env_file):
-    '''Load environment variables'''
-    current_file_dir = os.path.abspath(os.path.dirname(__file__))
-    env_path = os.path.join(current_file_dir, env_file)
-    load_dotenv(dotenv_path=env_path)
-
-
 def loading(data_dir, pc_index, chunk_file_name, fast_embed_name):
     '''
     Load the data, index and embedder
@@ -91,8 +84,8 @@ def main():
         config = yaml.safe_load(file)
 
     # Load environment variables
-    env_file = config['env_file']
-    get_env(env_file)
+    env_file_name = config['env_file']
+    load_dotenv(dotenv_path=env_file_name)
 
     # Load everything
     data_dir = config['data_dir']

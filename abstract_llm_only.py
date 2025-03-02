@@ -5,13 +5,6 @@ import yaml
 from langchain_openai import ChatOpenAI
 
 
-def get_env(env_file):
-    '''Load environment variables'''
-    current_file_dir = os.path.abspath(os.path.dirname(__file__))
-    env_path = os.path.join(current_file_dir, env_file)
-    load_dotenv(dotenv_path=env_path)
-
-
 def loading(llm_model_name):
     # Create LLM
     llm = ChatOpenAI(model_name=llm_model_name)
@@ -31,8 +24,8 @@ def main():
         config = yaml.safe_load(file)
 
     # Load the environment variables
-    env_file = config['env_file']
-    get_env(env_file)
+    env_file_name = config['env_file']
+    load_dotenv(dotenv_path=env_file_name)
 
     # Create LLM
     llm_model_name = config['llm_model_name']

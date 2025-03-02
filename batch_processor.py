@@ -20,13 +20,6 @@ from abstract_rag_rewrite import query_rag_rewrite
 from abstract_rag_2_advanced import query_rag_2_adv
 
 
-def get_env(env_file):
-    '''Load environment variables'''
-    current_file_dir = os.path.abspath(os.path.dirname(__file__))
-    env_path = os.path.join(current_file_dir, env_file)
-    load_dotenv(dotenv_path=env_path)
-
-
 def loading(pc_index, chunk_file_name, llm_model_name, fast_embed_name, data_dir):
     # Get the data directory
     current_file_dir = os.path.abspath(os.path.dirname(__file__))
@@ -69,8 +62,8 @@ def main():
         config = yaml.safe_load(f)
 
     # Load the environment variables
-    env_file = config['env_file']
-    get_env(env_file)
+    env_file_name = config['env_file']
+    load_dotenv(dotenv_path=env_file_name)
 
     # Load the splits, index, llm, and embedder
     pc_index = config['pc_index']

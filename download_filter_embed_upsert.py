@@ -15,12 +15,6 @@ from tqdm import tqdm
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from fastembed import TextEmbedding
 
-def get_env(env_file_name):
-    '''Load environment variables'''
-    print("Loading environment variables")
-    current_file_dir = os.path.abspath(os.path.dirname(__file__))
-    env_path = os.path.join(current_file_dir, env_file_name)
-    load_dotenv(dotenv_path=env_path)
 
 def download(dataset_kaggle, data_dir, dl_file_name):
     '''
@@ -299,7 +293,7 @@ def main():
     
     # Load environment variables
     env_file_name = config['env_file']
-    get_env(env_file_name)
+    load_dotenv(dotenv_path=env_file_name)
 
     # Download the abstracts
     dataset_kaggle = config['dataset_kaggle']
