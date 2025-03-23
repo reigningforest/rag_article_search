@@ -321,6 +321,20 @@ def main():
     save_checkpoints = config['save_checkpoints']
     embeddings_file_name = config['embeddings_file_name']
     embeddings = embed_chunks(data_dir_path, chunk_df['chunk_text'].values, ch_batch_size, save_every, save_checkpoints, fast_embed_name, embeddings_file_name)
+    
+    # set seed
+    np.random.seed(42)
+
+    # Randomly select embeddings
+    chunks_selected = chunk_df.sample(n=10000, random_state=42)
+    embeddings_selected = embeddings[chunks_selected.index]
+
+    # save the embeddings
+    np.save(os.path.join(data_dir_path, config['embeddings_selected_file_name']), embeddings_selected)
+    chunks_selected.to_pickle(os.path.join(data_dir_path, config['chunk_selected_file_name']))
+    
+    del chunks_selected
+    del embeddings_selected
     del chunk_df
 
     # upsert the embeddings to pinecone

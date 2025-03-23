@@ -22,3 +22,10 @@ langchain_huggingface
 langchain_pinecone
 langchain_core
 pinecone
+typing
+langgraph
+
+ollama
+transformers
+datasets
+peft
