@@ -1,31 +1,26 @@
-# Extra indexes for CUDA-compatible packages
---extra-index-url=https://download.pytorch.org/whl/cu121
---extra-index-url=https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
-
-# Core packages
+# Core dependencies for the Agentic RAG System
 torch>=2.5.1
-onnxruntime-gpu>=1.17.0
-fastembed-gpu
-scikit-learn
-tensorflow
-python-dotenv
-pyyaml
-kaggle
-kagglehub
-numpy
-pandas
-tqdm
-langchain
-langchain-text-splitters
-langchain_openai
-langchain_huggingface
-langchain_pinecone
-langchain_core
-pinecone
-typing
-langgraph
+python-dotenv>=1.0.1
+pyyaml>=6.0.1
+kaggle>=1.6.14
+kagglehub>=0.2.0
+pandas>=2.2.2
+tqdm>=4.66.4
 
-ollama
-transformers
-datasets
-peft
+# LangChain ecosystem (without OpenAI)
+langchain>=0.2.5
+langchain-text-splitters>=0.2.1
+langchain-huggingface>=0.0.3
+langchain-pinecone>=0.1.1
+langchain-core>=0.2.9
+langgraph>=0.1.0
+
+# Vector database
+pinecone>=5.0.0
+
+# Google Gemini
+google-generativeai>=0.8.0
+
+# Validation
+pydantic>=2.11.7
+pydantic-settings>=2.10.0

@@ -1,0 +1,57 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Development files
+.vscode/
+.idea/
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+.env.local
+.env.development
+
+# Data files (these should be mounted or downloaded at runtime)
+data/
+output/
+models/
+embedding_cache/
+
+# Old files that are being removed
+agentic_rag_finetune.py
+agentic_rag.py
+base_rag.py
+base_llm.py
+src/models/simplifier.py
+src/loaders/model_loader.py
+
+# Comparison files
+rag_comparison/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Poetry files
+poetry.lock
+pyproject.toml
+
+# Temporary files
+*.tmp
+*.log
+.cache/
+
+# Environment variables (should be passed at runtime)
+.env

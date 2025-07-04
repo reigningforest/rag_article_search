@@ -1,0 +1,122 @@
+# Directory Names
+data_dir: "data"
+output_dir: "output"
+model_dir: "models"
+dataset_kaggle: "Cornell-University/arxiv"
+embedding_cache_dir: "embedding_cache"
+
+# File Names
+env_file: ".env"
+dl_file_name: "arxiv-metadata-oai-snapshot.json"
+filter_file_name: "filtered_abstracts.pkl"
+chunk_file_name: "chunked_abstracts.pkl"
+chunk_selected_file_name: "chunks_selected.pkl"
+embeddings_file_name: "embeddings_final.npy"
+embeddings_selected_file_name: "embeddings_selected.npy"
+prompt_file_name: "prompts.txt"
+
+# Output file names
+base_graph_file_name: "base_rag_graph.png"
+fine_tuned_graph_file_name: "fine_tuned_rag_graph.png"
+multi_run_file_name: "multi_run_results.txt"
+unit_test_file_name: "unit_test_results.txt"
+
+# Filtering Variables
+date: "2021-10-01"
+
+# Chunking Variables
+chunk_size: 2000
+chunk_overlap: 200
+min_text_len: 50
+
+# Embedding Variables
+fast_embed_name: "BAAI/bge-small-en-v1.5"
+ch_batch_size: 256
+save_every: 40000
+save_checkpoints: False
+
+# Upserting Variables
+pc_index: "abstract-index"
+pc_index_selected: "abstract-index-selected"
+distance_metric: "cosine"
+pc_batch_size: 500
+pc_cloud: "aws"
+pc_region: "us-east-1"
+
+# RAG Variables
+gemini_model_name: "gemini-2.0-flash"
+top_k: 5
+
+# Prompt Variables
+base_prompt: |
+  Answer {query} using context:
+
+  {context}
+
+  Guidelines:
+  1. Resolve ambiguities using multiple query versions
+  2. Weight recent papers higher
+  3. Cross-validate findings across query variants
+  4. Summarize across query variants
+
+
+rewrite_prompt: |
+  Generate 2 alternative search queries for: {query}
+  Focus on different aspects of the question and use synonyms or related terms.
+  Respond ONLY with the queries in format "<query1> \n <query2>"
+
+classification_prompt: |
+  Analyze "{query}" using the following guidelines:
+
+  Determine if 2022-2024 ArXiv papers should be retrieved. Answer YES or NO based on these rules:
+
+  Answer YES if:
+  1. Time references after 2022: "recent", "last 3 years", "2022-2024", "current", "latest"
+  2. New tech: "new developments", "recent breakthroughs"
+  3. Active research: "LLM quantization", "CRISPR delivery"
+  4. Comparisons: "How has * changed since 2021?"
+
+  Answer NO if:
+  1. Historical: "history of", "discovery of", "origins of", "historical development", "original paper"
+  2. Basic concepts: "principles of", "what is"
+  3. Pre-2022: "before 2022", "traditional methods"
+
+  If unclear or conflicting, answer NO.
+
+  Examples:
+  "What are the latest developments in CRISPR-Cas9?" = YES
+  "What recent breakthroughs in CRISPR-Cas9 have occurred?" = YES
+  "What breakthroughs in CRISPR-Cas9 were made before 2014?" = NO
+  "What is the history of CRISPR-Cas9?" = NO
+  "What is CRISPR-Cas9's basic mechanism?" = NO
+  "What is CRISPR-Cas9?" = NO
+
+  Answer ONLY YES or NO.
+
+hugging_face_template: |
+  <|im_start|>system
+  You are a technical abstract explainer. Your explanation should:
+    - Use clear, accessible language
+    - Retain all technical terms from the original
+    - Give a high-level overview of the background of abstract's topic
+    - Briefly define any specialized jargon when first mentioned
+    - Maintain the core meaning and relationships between concepts
+    - Organize information in a logical flow
+  <|im_end|>
+  <|im_start|>user
+  {abstract}
+  <|im_end|>
+  <|im_start|>assistant
+
+final_prompt: |
+  Consider these query perspectives: {rewrites}
+
+  Answer {query} using context:
+
+  {context}
+
+  Guidelines:
+  1. Resolve ambiguities using multiple query versions
+  2. Weight recent papers higher
+  3. Cross-validate findings across query variants
+  4. Summarize across query variants
