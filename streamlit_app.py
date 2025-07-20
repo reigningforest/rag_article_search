@@ -69,6 +69,13 @@ def check_dependencies():
     return dependencies, env_status
 
 
+def handle_progress_error(progress_bar, status_text, error_msg):
+    """Consolidated error handling for progress tracking."""
+    progress_bar.progress(100)
+    status_text.text("❌ Query processing failed")
+    return {"error": f"Query execution failed: {error_msg}"}
+
+
 def run_data_pipeline():
     """Run the data processing pipeline using existing function."""
     try:
@@ -119,6 +126,96 @@ def initialize_rag_system():
         return None
 
 
+def initialize_rag_system_with_progress():
+    """Initialize RAG system with detailed progress tracking."""
+    import time
+    
+    # Create progress tracking elements
+    progress_container = st.empty()
+    
+    with progress_container.container():
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        # Define initialization steps
+        steps = [
+            {"name": "🔧 Loading configuration...", "progress": 10},
+            {"name": "🔑 Validating API keys...", "progress": 20},
+            {"name": "🖥️ Setting up device...", "progress": 30},
+            {"name": "📊 Loading data chunks...", "progress": 45},
+            {"name": "🗂️ Connecting to Pinecone index...", "progress": 60},
+            {"name": "🤖 Loading Gemini models...", "progress": 75},
+            {"name": "🧮 Loading embedding model...", "progress": 85},
+            {"name": "🔗 Building RAG workflow graph...", "progress": 95},
+            {"name": "✅ System ready!", "progress": 100},
+        ]
+        
+        def update_progress(step_name, progress):
+            progress_bar.progress(progress)
+            status_text.text(step_name)
+            time.sleep(0.3)  # Brief pause to show progress
+        
+        try:
+            # Step 1: Import components
+            update_progress(steps[0]["name"], steps[0]["progress"])
+            from src.models import load_all_components
+            from src.core import build_rag_graph
+            
+            # Step 2: Load config
+            update_progress(steps[1]["name"], steps[1]["progress"])
+            config = load_config()
+            
+            # Step 3: Check API keys
+            update_progress(steps[2]["name"], steps[2]["progress"])
+            gemini_api_key = os.getenv("GEMINI_API_KEY")
+            if not gemini_api_key:
+                progress_container.empty()
+                st.error("GEMINI_API_KEY not found in environment variables.")
+                return None
+            
+            # Step 4: Set up device
+            update_progress(steps[3]["name"], steps[3]["progress"])
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            
+            # Step 5-8: Load components (this is where the heavy lifting happens)
+            update_progress(steps[4]["name"], steps[4]["progress"])
+            data_dir = config["data_dir"]
+            
+            # We'll advance progress during component loading
+            update_progress(steps[5]["name"], steps[5]["progress"])
+            time.sleep(0.5)  # Simulate loading time
+            
+            update_progress(steps[6]["name"], steps[6]["progress"])
+            splits, index, gemini_llm, embedder, gemini_model = load_all_components(
+                config, data_dir, device, gemini_api_key
+            )
+            
+            # Step 9: Build graph
+            update_progress(steps[7]["name"], steps[7]["progress"])
+            rag_graph = build_rag_graph(
+                splits, index, gemini_llm, embedder, config, gemini_model
+            )
+            
+            # Final step
+            update_progress(steps[8]["name"], steps[8]["progress"])
+            time.sleep(0.5)  # Brief pause to show completion
+            
+            # Clear progress elements after completion
+            progress_container.empty()
+            
+            return rag_graph
+            
+        except Exception as e:
+            # Show error in progress tracking
+            progress_bar.progress(100)
+            status_text.text("❌ System initialization failed")
+            time.sleep(1)
+            progress_container.empty()
+            st.error(f"Failed to initialize RAG system: {str(e)}")
+            return None
+
+
 def query_rag_system(rag_graph, query):
     """Query the RAG system."""
     try:
@@ -129,6 +226,7 @@ def query_rag_system(rag_graph, query):
             "documents": [],
             "response": "",
             "current_step": "initialized",
+            "last_completed_step": "",
         }
 
         result = rag_graph.invoke(initial_state)
@@ -139,29 +237,40 @@ def query_rag_system(rag_graph, query):
 
 
 def query_rag_system_with_progress(rag_graph, query, progress_bar, status_text):
-    """Query the RAG system with detailed progress tracking."""
-    import time
-
+    """Query the RAG system with simple callback-based progress tracking."""
     try:
-        # Define the workflow steps
-        steps = [
-            {"name": "🧠 Analyzing query intent...", "progress": 15},
-            {"name": "🤔 Determining response strategy...", "progress": 30},
-            {"name": "📝 Generating query variations...", "progress": 45},
-            {"name": "🔍 Searching vector database...", "progress": 60},
-            {"name": "📄 Processing relevant papers...", "progress": 75},
-            {"name": "✨ Generating intelligent response...", "progress": 90},
-            {"name": "✅ Finalizing results...", "progress": 100},
-        ]
+        # Initialize
+        progress_bar.progress(0)
+        status_text.text("🚀 Starting query processing...")
+        
+        # Force Streamlit to update immediately
+        import time
+        time.sleep(0.1)
 
-        def update_progress(step_name, progress):
-            progress_bar.progress(progress)
-            status_text.text(step_name)
-            time.sleep(0.3)  # Brief pause to show progress
+        # Progress mapping using simple tuples - showing current activity
+        progress_steps = {
+            "classify": (15, "🧠 Analyzing query..."),
+            "rewrite_query": (35, "📝 Generating query variations..."),
+            "retrieve": (55, "🔍 Retrieving relevant documents..."),
+            "simplify_abstracts": (80, "✨ Simplifying abstracts..."),
+            "generate_rag_response": (95, "🤖 Generating response..."),
+            "direct_answer": (95, "🤖 Generating direct response..."),
+        }
 
-        # Step 1: Initialize query
-        update_progress(steps[0]["name"], steps[0]["progress"])
+        def update_progress(step_name):
+            """Simple callback to update progress directly."""
+            print(f"Progress callback called for: {step_name}")  # Debug print
+            if step_name in progress_steps:
+                progress, status = progress_steps[step_name]
+                progress_bar.progress(progress)
+                status_text.text(status)
+                # Force Streamlit to update
+                time.sleep(0.2)
+                print(f"Updated progress to {progress}% - {status}")  # Debug print
+            else:
+                print(f"Unknown step: {step_name}")  # Debug print
 
+        # Create initial state with callback
         initial_state = {
             "query": query,
             "needs_arxiv": False,
@@ -169,36 +278,30 @@ def query_rag_system_with_progress(rag_graph, query, progress_bar, status_text):
             "documents": [],
             "response": "",
             "current_step": "initialized",
+            "last_completed_step": "",
+            "progress_callback": update_progress,  # Add callback to state
         }
 
-        # Step 2: Start processing
-        update_progress(steps[1]["name"], steps[1]["progress"])
+        print("Starting RAG graph execution with progress callback...")  # Debug print
+        
+        # Single execution - no threading, no double execution
+        result = rag_graph.invoke(initial_state)
 
-        # We'll track the workflow by monitoring state changes
-        # This is a simplified approach - in a more advanced implementation,
-        # you could modify the nodes to emit progress events
+        print(f"RAG graph completed. Final step: {result.get('last_completed_step', '')}")  # Debug print
 
-        result = None
-        for i, step in enumerate(steps[2:], 2):  # Start from step 2
-            if i < len(steps):
-                update_progress(step["name"], step["progress"])
-
-            if i == 2:  # After showing "query variations", start the actual graph
-                result = rag_graph.invoke(initial_state)
-                # If we get here, the graph completed successfully
-                break
-
-        # Ensure we reach 100%
-        update_progress("✅ Query completed successfully!", 100)
-        time.sleep(0.5)  # Brief pause to show completion
-
+        # Show final completion
+        final_step = result.get("last_completed_step", "")
+        if final_step == "direct_answer":
+            status_text.text("🤖 Generated direct response!")
+        else:
+            status_text.text("🤖 Generated intelligent response!")
+            
+        progress_bar.progress(100)
         return result
 
     except Exception as e:
-        # Show error in progress tracking
-        progress_bar.progress(100)
-        status_text.text("❌ Query processing failed")
-        return {"error": f"Query execution failed: {str(e)}"}
+        print(f"Error in query_rag_system_with_progress: {str(e)}")  # Debug print
+        return handle_progress_error(progress_bar, status_text, str(e))
 
 
 def main():
@@ -267,8 +370,7 @@ def main():
 
         # Initialize RAG system if not already done
         if "rag_graph" not in st.session_state:
-            with st.spinner("Initializing RAG system..."):
-                st.session_state.rag_graph = initialize_rag_system()
+            st.session_state.rag_graph = initialize_rag_system_with_progress()
 
         if st.session_state.rag_graph is None:
             st.error(
@@ -278,15 +380,24 @@ def main():
             # Query interface
             st.subheader("💬 Ask Questions")
 
-            query = st.text_input(
-                "Enter your question:",
-                placeholder="What are the recent developments in transformer architectures?",
-            )
+            # Create a form to handle Enter key press
+            with st.form(key='search_form', clear_on_submit=False):
+                query = st.text_input(
+                    "Enter your question:",
+                    placeholder="What are the recent developments in transformer architectures?",
+                    key="query_input"
+                )
 
-            col1, col2 = st.columns([1, 4])
+                # Submit button for the form (handles Enter key)
+                form_submit = st.form_submit_button("🔍 Search", type="primary")
 
-            with col1:
-                if st.button("🔍 Search", type="primary") and query:
+            # Process search when form is submitted
+            search_triggered = form_submit
+            
+            if search_triggered:
+                if not query or query.strip() == "":
+                    st.error("⚠️ Please enter a proper question before searching!")
+                else:
                     # Create progress tracking elements
                     progress_container = st.empty()
                     status_container = st.empty()
@@ -311,57 +422,57 @@ def main():
                         progress_container.empty()
                         status_container.empty()
 
-            with col2:
-                if st.button("🔄 Refresh Data"):
-                    # Show warning modal
-                    st.warning("⚠️ **Data Refresh Warning**")
-                    st.markdown("""
-                    **This will completely refresh your dataset and may take several hours.**
-                    
-                    **The process will:**
-                    1. 🗑️ Delete existing processed data files
-                    2. 📥 Re-download the entire ArXiv dataset from Kaggle (~4GB)
-                    3. 🔄 Re-process and chunk all papers
-                    4. 🧮 Re-generate embeddings for all chunks
-                    5. 📤 Re-upload embeddings to Pinecone vector database
-                    6. 💾 Save new processed files locally
-                    
-                    **Requirements:**
-                    - Stable internet connection
-                    - ~20GB free disk space
-                    - Several hours of processing time
-                    - Valid Kaggle and Pinecone API credentials
-                    """)
+            # Refresh Data button
+            if st.button("🔄 Refresh Data"):
+                # Show warning modal
+                st.warning("⚠️ **Data Refresh Warning**")
+                st.markdown("""
+                **This will completely refresh your dataset and may take several hours.**
+                
+                **The process will:**
+                1. 🗑️ Delete existing processed data files
+                2. 📥 Re-download the entire ArXiv dataset from Kaggle (~4GB)
+                3. 🔄 Re-process and chunk all papers
+                4. 🧮 Re-generate embeddings for all chunks
+                5. 📤 Re-upload embeddings to Pinecone vector database
+                6. 💾 Save new processed files locally
+                
+                **Requirements:**
+                - Stable internet connection
+                - ~20GB free disk space
+                - Several hours of processing time
+                - Valid Kaggle and Pinecone API credentials
+                """)
 
-                    col_confirm, col_cancel = st.columns(2)
+                col_confirm, col_cancel = st.columns(2)
 
-                    with col_confirm:
-                        if st.button(
-                            "⚠️ YES, Refresh Everything",
-                            type="secondary",
-                            help="This will take several hours",
-                        ):
-                            # Check for kaggle.json file
-                            kaggle_json_path = Path.home() / ".kaggle" / "kaggle.json"
-                            if not kaggle_json_path.exists():
-                                st.error(
-                                    "Kaggle authentication required. Please place your kaggle.json file in ~/.kaggle/kaggle.json"
-                                )
-                            else:
-                                with st.spinner(
-                                    "Refreshing data... This may take several hours."
-                                ):
-                                    success = run_data_pipeline()
-                                    if success:
-                                        st.success("✅ Data refreshed successfully!")
-                                        # Clear cached RAG system to reload with new data
-                                        if "rag_graph" in st.session_state:
-                                            del st.session_state.rag_graph
-                                        st.rerun()
+                with col_confirm:
+                    if st.button(
+                        "⚠️ YES, Refresh Everything",
+                        type="secondary",
+                        help="This will take several hours",
+                    ):
+                        # Check for kaggle.json file
+                        kaggle_json_path = Path.home() / ".kaggle" / "kaggle.json"
+                        if not kaggle_json_path.exists():
+                            st.error(
+                                "Kaggle authentication required. Please place your kaggle.json file in ~/.kaggle/kaggle.json"
+                            )
+                        else:
+                            with st.spinner(
+                                "Refreshing data... This may take several hours."
+                            ):
+                                success = run_data_pipeline()
+                                if success:
+                                    st.success("✅ Data refreshed successfully!")
+                                    # Clear cached RAG system to reload with new data
+                                    if "rag_graph" in st.session_state:
+                                        del st.session_state.rag_graph
+                                    st.rerun()
 
-                    with col_cancel:
-                        if st.button("❌ Cancel", type="primary"):
-                            st.rerun()
+                with col_cancel:
+                    if st.button("❌ Cancel", type="primary"):
+                        st.rerun()
 
             # Display results
             if (
@@ -381,60 +492,7 @@ def main():
                 )
                 st.write(response)
 
-                # Show additional info in expandable sections
-                if (
-                    isinstance(st.session_state.last_result, dict)
-                    and "documents" in st.session_state.last_result
-                    and st.session_state.last_result["documents"]
-                ):
-                    with st.expander(
-                        f"📄 Source Documents ({len(st.session_state.last_result['documents'])} found)",
-                        expanded=False,
-                    ):
-                        for i, doc in enumerate(
-                            st.session_state.last_result["documents"], 1
-                        ):
-                            with st.container():
-                                # Create a styled header for each document
-                                st.markdown(f"### 📋 **Source {i}**")
-
-                                # Add document content in a styled box
-                                with st.container():
-                                    # Check if document is a dict with more structure or just text
-                                    if isinstance(doc, dict):
-                                        # Handle structured document
-                                        if "title" in doc:
-                                            st.markdown(
-                                                f"**📝 Title:** {doc.get('title', 'No title')}"
-                                            )
-                                        if "content" in doc:
-                                            st.markdown("**📄 Content:**")
-                                            st.text_area(
-                                                f"Document {i} Content",
-                                                doc.get("content", ""),
-                                                height=150,
-                                                disabled=True,
-                                                key=f"doc_{i}",
-                                            )
-                                        if "metadata" in doc:
-                                            st.markdown("**ℹ️ Metadata:**")
-                                            st.json(doc.get("metadata", {}))
-                                    else:
-                                        # Handle simple text document
-                                        st.markdown("**📄 Content:**")
-                                        # Use text area for better formatting of long text
-                                        st.text_area(
-                                            f"Document {i} Content",
-                                            str(doc),
-                                            height=150,
-                                            disabled=True,
-                                            key=f"doc_text_{i}",
-                                        )
-
-                                # Add separator between documents (except for the last one)
-                                if i < len(st.session_state.last_result["documents"]):
-                                    st.divider()
-
+                # Show query variations first (above source documents)
                 if (
                     isinstance(st.session_state.last_result, dict)
                     and "rewrites" in st.session_state.last_result
@@ -452,24 +510,112 @@ def main():
                             "*These variations help find more relevant papers by exploring different ways to express your question.*"
                         )
 
-                        # Display rewrites in a more structured way
-                        for i, rewrite in enumerate(
-                            st.session_state.last_result["rewrites"], 1
+                        # Handle rewrites - should now be a proper list from the rewrite node
+                        rewrites = st.session_state.last_result["rewrites"]
+                        
+                        # Simple handling since rewrites should already be a clean list
+                        if isinstance(rewrites, list):
+                            rewrite_list = rewrites
+                        else:
+                            # Fallback if for some reason it's still a string
+                            rewrite_list = [str(rewrites)]
+
+                        # Display rewrites as a clean numbered list
+                        for i, rewrite in enumerate(rewrite_list, 1):
+                            if rewrite.strip():  # Only show non-empty rewrites
+                                st.markdown(f"**{i}.** {rewrite.strip()}")
+
+                # Show additional info in expandable sections
+                if (
+                    isinstance(st.session_state.last_result, dict)
+                    and "documents" in st.session_state.last_result
+                    and st.session_state.last_result["documents"]
+                ):
+                    with st.expander(
+                        f"📄 Source Documents ({len(st.session_state.last_result['documents'])} found)",
+                        expanded=False,
+                    ):
+                        for i, doc in enumerate(
+                            st.session_state.last_result["documents"], 1
                         ):
                             with st.container():
-                                col_num, col_rewrite = st.columns([0.1, 0.9])
-                                with col_num:
-                                    st.markdown(f"**{i}.**")
-                                with col_rewrite:
-                                    # Use a subtle background for each rewrite
-                                    st.markdown(
-                                        f"""
-                                    <div style="background-color: #f0f2f6; padding: 10px; border-radius: 5px; margin-bottom: 5px;">
-                                        <em>{rewrite}</em>
-                                    </div>
-                                    """,
-                                        unsafe_allow_html=True,
+                                # Create a styled header for each document
+                                st.markdown(f"### 📋 **Source {i}**")
+                                
+                                # Display basic info first
+                                if isinstance(doc, dict):
+                                    if "title" in doc:
+                                        st.markdown(f"**📝 Title:** {doc.get('title', 'No title')}")
+                                    if "date" in doc:
+                                        st.markdown(f"**📅 Date:** {doc.get('date', 'No date')}")
+
+                                # Create tabs for different content views
+                                if isinstance(doc, dict) and "text" in doc:
+                                    abstract_text = doc.get("text", "")
+                                    
+                                    # Try to split original and simplified versions
+                                    if "ORIGINAL TEXT:" in abstract_text and "SIMPLIFIED VERSION:" in abstract_text:
+                                        parts = abstract_text.split("SIMPLIFIED VERSION:")
+                                        original_text = parts[0].replace("ORIGINAL TEXT:", "").strip()
+                                        simplified_text = parts[1].strip() if len(parts) > 1 else "No simplified version available"
+                                        
+                                        # Create tabs
+                                        tab1, tab2, tab3 = st.tabs(["✨ Simplified", "📄 Original", "ℹ️ Details"])
+                                        
+                                        with tab1:
+                                            st.text_area(
+                                                "AI-Simplified Summary",
+                                                simplified_text,
+                                                height=300,
+                                                disabled=True,
+                                                key=f"doc_{i}_simplified",
+                                            )
+                                        
+                                        with tab2:
+                                            st.text_area(
+                                                "Original Abstract",
+                                                original_text,
+                                                height=300,
+                                                disabled=True,
+                                                key=f"doc_{i}_original",
+                                            )
+                                        
+                                        with tab3:
+                                            if "metadata" in doc:
+                                                st.json(doc.get("metadata", {}))
+                                            else:
+                                                st.write("No additional metadata available")
+                                    else:
+                                        # Single content version - show in simplified tab
+                                        tab1, tab2 = st.tabs(["📄 Content", "ℹ️ Details"])
+                                        
+                                        with tab1:
+                                            st.text_area(
+                                                "Abstract/Content",
+                                                abstract_text,
+                                                height=300,
+                                                disabled=True,
+                                                key=f"doc_{i}_content",
+                                            )
+                                        
+                                        with tab2:
+                                            if "metadata" in doc:
+                                                st.json(doc.get("metadata", {}))
+                                            else:
+                                                st.write("No additional metadata available")
+                                else:
+                                    # Handle simple text document
+                                    st.text_area(
+                                        f"Document {i} Content",
+                                        str(doc),
+                                        height=300,
+                                        disabled=True,
+                                        key=f"doc_text_{i}",
                                     )
+
+                                # Add separator between documents (except for the last one)
+                                if i < len(st.session_state.last_result["documents"]):
+                                    st.divider()
 
 
 if __name__ == "__main__":
