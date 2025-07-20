@@ -4,6 +4,7 @@ Individual node functions for the RAG graph workflow.
 
 from typing import Dict, Any, Literal
 from tqdm import tqdm
+import re
 
 from ..core.state import RAGState
 from ..connections.gemini_query import query_gemini
@@ -14,11 +15,11 @@ def create_classify_node(gemini_model, classification_prompt: str):
 
     def classify_node(state: RAGState) -> Dict[str, Any]:
         query = state["query"]
-        
+
         # Call progress callback at START of node
         if "progress_callback" in state and callable(state["progress_callback"]):
             state["progress_callback"]("classify")
-        
+
         print("Classifying query")
 
         # Format the prompt with the query
@@ -30,7 +31,11 @@ def create_classify_node(gemini_model, classification_prompt: str):
 
         print(f"Classification result: {needs_arxiv}")
 
-        return {"needs_arxiv": needs_arxiv, "current_step": "classification_complete", "last_completed_step": "classify"}
+        return {
+            "needs_arxiv": needs_arxiv,
+            "current_step": "classification_complete",
+            "last_completed_step": "classify",
+        }
 
     return classify_node
 
@@ -40,11 +45,11 @@ def create_rewrite_node(gemini_model, rewrite_prompt: str):
 
     def rewrite_node(state: RAGState) -> Dict[str, Any]:
         query = state["query"]
-        
+
         # Call progress callback at START of node
         if "progress_callback" in state and callable(state["progress_callback"]):
             state["progress_callback"]("rewrite_query")
-        
+
         print("Generating query rewrites")
 
         # Format the prompt with the query
@@ -52,29 +57,38 @@ def create_rewrite_node(gemini_model, rewrite_prompt: str):
 
         # Query Gemini directly
         rewrites_text = query_gemini(gemini_model, formatted_prompt)
-        
+
         # Handle different possible response formats
-        rewrites_text = rewrites_text.replace('\\n', '\n')  # Replace literal \n with actual newlines
-        
+        rewrites_text = rewrites_text.replace(
+            "\\n", "\n"
+        )  # Replace literal \n with actual newlines
+
         # Split by newlines and clean up
         rewrites = []
-        for line in rewrites_text.split('\n'):
+        for line in rewrites_text.split("\n"):
             line = line.strip()
             # Remove numbering (1., 2., etc.) and bullet points
-            import re
-            line = re.sub(r'^\d+\.\s*', '', line)
-            line = re.sub(r'^[-*•]\s*', '', line)
-            
-            if line and len(line) > 10:  # Only keep non-empty lines with reasonable length
+
+            line = re.sub(r"^\d+\.\s*", "", line)
+            line = re.sub(r"^[-*•]\s*", "", line)
+
+            if (
+                line and len(line) > 10
+            ):  # Only keep non-empty lines with reasonable length
                 rewrites.append(line)
 
         # If we still don't have multiple rewrites, try other splitting methods
         if len(rewrites) <= 1:
             # Try splitting by common sentence endings followed by capital letters
-            import re
-            sentences = re.split(r'[.!?]\s*(?=[A-Z])', rewrites_text)
-            rewrites = [s.strip() + '.' if not s.strip().endswith(('.', '!', '?')) else s.strip() 
-                       for s in sentences if s.strip() and len(s.strip()) > 10]
+
+            sentences = re.split(r"[.!?]\s*(?=[A-Z])", rewrites_text)
+            rewrites = [
+                s.strip() + "."
+                if not s.strip().endswith((".", "!", "?"))
+                else s.strip()
+                for s in sentences
+                if s.strip() and len(s.strip()) > 10
+            ]
 
         # If we still have only one item, at least ensure it's a list
         if len(rewrites) == 0:
@@ -82,7 +96,11 @@ def create_rewrite_node(gemini_model, rewrite_prompt: str):
 
         print(f"Generated {len(rewrites)} query rewrites: {rewrites}")
 
-        return {"rewrites": rewrites, "current_step": "rewrites_generated", "last_completed_step": "rewrite_query"}
+        return {
+            "rewrites": rewrites,
+            "current_step": "rewrites_generated",
+            "last_completed_step": "rewrite_query",
+        }
 
     return rewrite_node
 
@@ -93,11 +111,11 @@ def create_retrieve_node(splits, index, embedder, top_k: int):
     def retrieve_node(state: RAGState) -> Dict[str, Any]:
         query = state["query"]
         rewrites = state["rewrites"]
-        
+
         # Call progress callback at START of node
         if "progress_callback" in state and callable(state["progress_callback"]):
             state["progress_callback"]("retrieve")
-        
+
         print("Retrieving documents for concatenated query and rewrites")
 
         # Concatenate all queries into one string
@@ -127,8 +145,12 @@ def create_retrieve_node(splits, index, embedder, top_k: int):
             documents.append(doc)
 
         print(f"Retrieved {len(documents)} documents")
-            
-        return {"documents": documents, "current_step": "documents_retrieved", "last_completed_step": "retrieve"}
+
+        return {
+            "documents": documents,
+            "current_step": "documents_retrieved",
+            "last_completed_step": "retrieve",
+        }
 
     return retrieve_node
 
@@ -138,11 +160,11 @@ def create_simplify_abstracts_node(gemini_model, simplifier_prompt: str):
 
     def simplify_abstracts_node(state: RAGState) -> Dict[str, Any]:
         documents = state["documents"]
-        
+
         # Call progress callback at START of node
         if "progress_callback" in state and callable(state["progress_callback"]):
             state["progress_callback"]("simplify_abstracts")
-        
+
         print(f"Enhancing {len(documents)} abstracts with simplified versions")
 
         enhanced_documents = []
@@ -162,8 +184,12 @@ def create_simplify_abstracts_node(gemini_model, simplifier_prompt: str):
             enhanced_documents.append(enhanced_doc)
 
         print(f"Enhanced {len(enhanced_documents)} abstracts with simplified versions")
-            
-        return {"documents": enhanced_documents, "current_step": "abstracts_enhanced", "last_completed_step": "simplify_abstracts"}
+
+        return {
+            "documents": enhanced_documents,
+            "current_step": "abstracts_enhanced",
+            "last_completed_step": "simplify_abstracts",
+        }
 
     return simplify_abstracts_node
 
@@ -198,7 +224,11 @@ def create_generate_response_node(gemini_model, final_prompt: str):
         # Query Gemini directly
         response = query_gemini(gemini_model, formatted_prompt)
 
-        return {"response": response, "current_step": "response_generated", "last_completed_step": "generate_rag_response"}
+        return {
+            "response": response,
+            "current_step": "response_generated",
+            "last_completed_step": "generate_rag_response",
+        }
 
     return generate_response_node
 
@@ -208,17 +238,21 @@ def create_direct_response_node(gemini_model):
 
     def direct_response_node(state: RAGState) -> Dict[str, Any]:
         query = state["query"]
-        
+
         # Call progress callback at START of node
         if "progress_callback" in state and callable(state["progress_callback"]):
             state["progress_callback"]("direct_answer")
-        
+
         print(f"Generating direct response for: {query}")
 
         # Query Gemini directly
         response = query_gemini(gemini_model, query)
 
-        return {"response": response, "current_step": "response_generated", "last_completed_step": "direct_answer"}
+        return {
+            "response": response,
+            "current_step": "response_generated",
+            "last_completed_step": "direct_answer",
+        }
 
     return direct_response_node
 

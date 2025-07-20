@@ -55,25 +55,33 @@ This project provides a web-based interface for intelligent research paper searc
 ## Features
 
 - **🌐 Web Interface**: Clean Streamlit app - single entry point for everything
+- **📊 Real-time Progress Tracking**: Live progress bars showing current processing steps
 - **🧠 Smart Data Detection**: Automatically shows data setup or query interface based on data availability
 - **💰 Cost-Conscious**: No automatic expensive operations - you control when data processing happens
 - **🤖 Agentic Components**: Intelligent query classification, rewriting, and processing
 - **☁️ Google Gemini Integration**: All LLM operations powered by Google Gemini 2.0 Flash
 - **🗃️ Vector Database**: Pinecone integration for semantic search
-- **� Optional Data Refresh**: Button to update data when needed
-- **� Query History**: Track your research queries
+- **🔄 Optional Data Refresh**: Button to update data when needed
+- **📝 Query History**: Track your research queries
 - **⚡ GPU/CPU Support**: Automatic detection with CPU fallback
+- **🎯 Smart Query Processing**: Multi-step RAG pipeline with progress feedback
 
 ## System Architecture
 
-The agentic RAG system follows these steps:
+The agentic RAG system follows these steps with real-time progress tracking:
 
 1. **Smart Interface**: Web app detects if processed data exists, shows appropriate interface
-2. **Optional Data Pipeline**: User-triggered download and processing of ArXiv papers 
+2. **Optional Data Pipeline**: User-triggered download and processing of ArXiv papers with detailed progress
 3. **Query Classification**: Determines if query requires arXiv paper retrieval using Gemini
 4. **Query Rewriting**: Generates multiple query variations for better retrieval using Gemini
 5. **Document Retrieval**: Semantic search using concatenated queries with Pinecone vector database
-6. **Response Generation**: Final answer generation using Gemini with enhanced context
+6. **Abstract Simplification**: AI-powered simplification of complex research abstracts
+7. **Response Generation**: Final answer generation using Gemini with enhanced context
+
+**Progress Tracking Features:**
+- **System Initialization**: Step-by-step loading progress with detailed status updates
+- **Query Processing**: Real-time progress showing current operation (analyzing, retrieving, generating)
+- **Visual Feedback**: Progress bars and status messages for all long-running operations
 
 **Workflow Modes:**
 - **First Time**: Data Pipeline Button → RAG Interface
@@ -166,10 +174,19 @@ streamlit run streamlit_app.py
 
 ### Normal Usage
 1. Launch the web app
-2. System automatically loads existing processed data
+2. System automatically loads existing processed data with progress tracking
 3. Ask questions in the query interface
-4. View responses with source documents
-5. Optional: Click **"Refresh Data"** to update with newer papers
+4. **Real-time Progress**: Watch as the system processes your query through each step:
+   - 🧠 Analyzing query...
+   - 📝 Generating query variations...
+   - 🔍 Retrieving relevant documents...
+   - ✨ Simplifying abstracts...
+   - 🤖 Generating response...
+5. View comprehensive responses with:
+   - **Main Response**: AI-generated answer based on research papers
+   - **Query Rewrites**: See how the system expanded your question
+   - **Source Documents**: Browse original and simplified abstracts
+6. Optional: Click **"Refresh Data"** to update with newer papers
 
 ### Graph Visualization
 
@@ -198,11 +215,11 @@ The generated graph shows the complete agentic RAG workflow including query clas
 
 ```
 rag_article_search/
-├── streamlit_app.py              # 🌐 Main web application (single entry point)
+├── streamlit_app.py              # 🌐 Main web application with real-time progress tracking
 ├── src/                          # Core system modules
 │   ├── core/                     # RAG workflow components
-│   │   ├── state.py              # RAG state definition
-│   │   ├── nodes.py              # LangGraph node functions
+│   │   ├── state.py              # RAG state definition with progress callback support
+│   │   ├── nodes.py              # LangGraph node functions with progress reporting
 │   │   └── rag_graph.py          # Graph workflow builder
 │   ├── models/                   # Model management
 │   │   └── model_loader.py       # Gemini, embeddings setup
@@ -252,6 +269,12 @@ distance_metric: "cosine"
 ```
 
 ## Performance Notes
+
+### Real-time Progress Tracking
+- **Callback-based System**: Progress updates happen in real-time as each processing step begins
+- **Visual Feedback**: Clear progress bars with descriptive status messages
+- **No Time Simulation**: Progress reflects actual system operations, not time estimates
+- **Step-by-step Updates**: Users see exactly what the system is doing at each moment
 
 ### GPU vs CPU
 - **GPU (CUDA)**: ~10x faster embeddings, requires `onnxruntime-gpu`
@@ -326,16 +349,22 @@ The test suite covers:
 1. **"No processed data found"**
    - Solution: Click "Run Data Pipeline" in the web interface
    - First-time setup requires data download and processing
+   - Watch the detailed progress bar during processing
 
-2. **"CUDA not available" or slow embeddings**
+2. **Progress tracking not updating**
+   - Solution: This should now be fixed with real-time callback-based progress
+   - Progress updates show current operation, not completed operations
+   - If still not working, check console logs for error messages
+
+3. **"CUDA not available" or slow embeddings**
    - Solution: Install GPU support: `poetry install --with gpu`
    - Or accept CPU processing (slower but works)
 
-3. **API Key errors**
+4. **API Key errors**
    - Solution: Check your `.env` file has all required keys
    - Verify keys are valid and have sufficient quota
 
-4. **Kaggle authentication failed**
+5. **Kaggle authentication failed**
    - **Solution**: Ensure `kaggle.json` is in the correct location
    - **Windows**: `C:\Users\{username}\.kaggle\kaggle.json`
    - **Linux/Mac**: `~/.kaggle/kaggle.json`

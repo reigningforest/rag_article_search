@@ -2,11 +2,15 @@
 Graph visualization utilities.
 """
 
+import sys
 import os
+import time
 import yaml
 import torch
 from dotenv import load_dotenv
 from langchain_core.runnables.graph import MermaidDrawMethod
+from src.models import load_all_components
+from src.core import build_rag_graph
 
 
 def visualize_graph(graph, output_path: str, overwrite: bool = False) -> bool:
@@ -26,7 +30,7 @@ def visualize_graph(graph, output_path: str, overwrite: bool = False) -> bool:
         if not overwrite:
             # Create a new filename with timestamp
             base, ext = os.path.splitext(output_path)
-            import time
+
             timestamp = int(time.time())
             output_path = f"{base}_{timestamp}{ext}"
             print(f"File already exists. Creating new file: {output_path}")
@@ -53,15 +57,11 @@ def visualize_graph(graph, output_path: str, overwrite: bool = False) -> bool:
 def main():
     """Main function to run graph visualization as a standalone script."""
     # Add project root to path for absolute imports
-    import sys
+
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
-    
-    # Now use absolute imports
-    from src.models import load_all_components
-    from src.core import build_rag_graph
-    
+
     # Load the config file
     config_path = os.path.join(project_root, "config", "config.yaml")
     with open(config_path, "r") as file:
@@ -107,7 +107,7 @@ def main():
     # Visualize the graph
     graph_output_path = os.path.join(output_dir, config["fine_tuned_graph_file_name"])
     print("Generating graph visualization...")
-    
+
     success = visualize_graph(rag_graph, graph_output_path, overwrite=True)
     if success:
         print("Graph visualization completed successfully!")

@@ -6,8 +6,15 @@ Single entry point - uses existing pipeline functions when needed.
 import streamlit as st
 import os
 import yaml
+import time
+import torch
 from pathlib import Path
 from dotenv import load_dotenv
+
+# Internal imports
+from scripts.get_data_pipeline import main as run_pipeline_main
+from src.models import load_all_components
+from src.core import build_rag_graph
 
 # Load environment variables at module level
 load_dotenv()
@@ -79,8 +86,6 @@ def handle_progress_error(progress_bar, status_text, error_msg):
 def run_data_pipeline():
     """Run the data processing pipeline using existing function."""
     try:
-        from scripts.get_data_pipeline import main as run_pipeline_main
-
         run_pipeline_main()
         return True
     except Exception as e:
@@ -91,10 +96,6 @@ def run_data_pipeline():
 def initialize_rag_system():
     """Initialize RAG components using existing function."""
     try:
-        # Import the components directly
-        from src.models import load_all_components
-        from src.core import build_rag_graph
-
         config = load_config()
 
         # Check for required API key
@@ -104,8 +105,6 @@ def initialize_rag_system():
             return None
 
         # Set up device
-        import torch
-
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # Load components
@@ -128,15 +127,14 @@ def initialize_rag_system():
 
 def initialize_rag_system_with_progress():
     """Initialize RAG system with detailed progress tracking."""
-    import time
-    
+
     # Create progress tracking elements
     progress_container = st.empty()
-    
+
     with progress_container.container():
         progress_bar = st.progress(0)
         status_text = st.empty()
-        
+
         # Define initialization steps
         steps = [
             {"name": "🔧 Loading configuration...", "progress": 10},
@@ -149,22 +147,20 @@ def initialize_rag_system_with_progress():
             {"name": "🔗 Building RAG workflow graph...", "progress": 95},
             {"name": "✅ System ready!", "progress": 100},
         ]
-        
+
         def update_progress(step_name, progress):
             progress_bar.progress(progress)
             status_text.text(step_name)
             time.sleep(0.3)  # Brief pause to show progress
-        
+
         try:
             # Step 1: Import components
             update_progress(steps[0]["name"], steps[0]["progress"])
-            from src.models import load_all_components
-            from src.core import build_rag_graph
-            
+
             # Step 2: Load config
             update_progress(steps[1]["name"], steps[1]["progress"])
             config = load_config()
-            
+
             # Step 3: Check API keys
             update_progress(steps[2]["name"], steps[2]["progress"])
             gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -172,40 +168,39 @@ def initialize_rag_system_with_progress():
                 progress_container.empty()
                 st.error("GEMINI_API_KEY not found in environment variables.")
                 return None
-            
+
             # Step 4: Set up device
             update_progress(steps[3]["name"], steps[3]["progress"])
-            import torch
             device = "cuda" if torch.cuda.is_available() else "cpu"
-            
+
             # Step 5-8: Load components (this is where the heavy lifting happens)
             update_progress(steps[4]["name"], steps[4]["progress"])
             data_dir = config["data_dir"]
-            
+
             # We'll advance progress during component loading
             update_progress(steps[5]["name"], steps[5]["progress"])
             time.sleep(0.5)  # Simulate loading time
-            
+
             update_progress(steps[6]["name"], steps[6]["progress"])
             splits, index, gemini_llm, embedder, gemini_model = load_all_components(
                 config, data_dir, device, gemini_api_key
             )
-            
+
             # Step 9: Build graph
             update_progress(steps[7]["name"], steps[7]["progress"])
             rag_graph = build_rag_graph(
                 splits, index, gemini_llm, embedder, config, gemini_model
             )
-            
+
             # Final step
             update_progress(steps[8]["name"], steps[8]["progress"])
             time.sleep(0.5)  # Brief pause to show completion
-            
+
             # Clear progress elements after completion
             progress_container.empty()
-            
+
             return rag_graph
-            
+
         except Exception as e:
             # Show error in progress tracking
             progress_bar.progress(100)
@@ -242,9 +237,8 @@ def query_rag_system_with_progress(rag_graph, query, progress_bar, status_text):
         # Initialize
         progress_bar.progress(0)
         status_text.text("🚀 Starting query processing...")
-        
+
         # Force Streamlit to update immediately
-        import time
         time.sleep(0.1)
 
         # Progress mapping using simple tuples - showing current activity
@@ -283,11 +277,13 @@ def query_rag_system_with_progress(rag_graph, query, progress_bar, status_text):
         }
 
         print("Starting RAG graph execution with progress callback...")  # Debug print
-        
+
         # Single execution - no threading, no double execution
         result = rag_graph.invoke(initial_state)
 
-        print(f"RAG graph completed. Final step: {result.get('last_completed_step', '')}")  # Debug print
+        print(
+            f"RAG graph completed. Final step: {result.get('last_completed_step', '')}"
+        )  # Debug print
 
         # Show final completion
         final_step = result.get("last_completed_step", "")
@@ -295,7 +291,7 @@ def query_rag_system_with_progress(rag_graph, query, progress_bar, status_text):
             status_text.text("🤖 Generated direct response!")
         else:
             status_text.text("🤖 Generated intelligent response!")
-            
+
         progress_bar.progress(100)
         return result
 
@@ -381,11 +377,11 @@ def main():
             st.subheader("💬 Ask Questions")
 
             # Create a form to handle Enter key press
-            with st.form(key='search_form', clear_on_submit=False):
+            with st.form(key="search_form", clear_on_submit=False):
                 query = st.text_input(
                     "Enter your question:",
                     placeholder="What are the recent developments in transformer architectures?",
-                    key="query_input"
+                    key="query_input",
                 )
 
                 # Submit button for the form (handles Enter key)
@@ -393,7 +389,7 @@ def main():
 
             # Process search when form is submitted
             search_triggered = form_submit
-            
+
             if search_triggered:
                 if not query or query.strip() == "":
                     st.error("⚠️ Please enter a proper question before searching!")
@@ -512,7 +508,7 @@ def main():
 
                         # Handle rewrites - should now be a proper list from the rewrite node
                         rewrites = st.session_state.last_result["rewrites"]
-                        
+
                         # Simple handling since rewrites should already be a clean list
                         if isinstance(rewrites, list):
                             rewrite_list = rewrites
@@ -541,27 +537,50 @@ def main():
                             with st.container():
                                 # Create a styled header for each document
                                 st.markdown(f"### 📋 **Source {i}**")
-                                
+
                                 # Display basic info first
                                 if isinstance(doc, dict):
                                     if "title" in doc:
-                                        st.markdown(f"**📝 Title:** {doc.get('title', 'No title')}")
+                                        st.markdown(
+                                            f"**📝 Title:** {doc.get('title', 'No title')}"
+                                        )
                                     if "date" in doc:
-                                        st.markdown(f"**📅 Date:** {doc.get('date', 'No date')}")
+                                        st.markdown(
+                                            f"**📅 Date:** {doc.get('date', 'No date')}"
+                                        )
 
                                 # Create tabs for different content views
                                 if isinstance(doc, dict) and "text" in doc:
                                     abstract_text = doc.get("text", "")
-                                    
+
                                     # Try to split original and simplified versions
-                                    if "ORIGINAL TEXT:" in abstract_text and "SIMPLIFIED VERSION:" in abstract_text:
-                                        parts = abstract_text.split("SIMPLIFIED VERSION:")
-                                        original_text = parts[0].replace("ORIGINAL TEXT:", "").strip()
-                                        simplified_text = parts[1].strip() if len(parts) > 1 else "No simplified version available"
-                                        
+                                    if (
+                                        "ORIGINAL TEXT:" in abstract_text
+                                        and "SIMPLIFIED VERSION:" in abstract_text
+                                    ):
+                                        parts = abstract_text.split(
+                                            "SIMPLIFIED VERSION:"
+                                        )
+                                        original_text = (
+                                            parts[0]
+                                            .replace("ORIGINAL TEXT:", "")
+                                            .strip()
+                                        )
+                                        simplified_text = (
+                                            parts[1].strip()
+                                            if len(parts) > 1
+                                            else "No simplified version available"
+                                        )
+
                                         # Create tabs
-                                        tab1, tab2, tab3 = st.tabs(["✨ Simplified", "📄 Original", "ℹ️ Details"])
-                                        
+                                        tab1, tab2, tab3 = st.tabs(
+                                            [
+                                                "✨ Simplified",
+                                                "📄 Original",
+                                                "ℹ️ Details",
+                                            ]
+                                        )
+
                                         with tab1:
                                             st.text_area(
                                                 "AI-Simplified Summary",
@@ -570,7 +589,7 @@ def main():
                                                 disabled=True,
                                                 key=f"doc_{i}_simplified",
                                             )
-                                        
+
                                         with tab2:
                                             st.text_area(
                                                 "Original Abstract",
@@ -579,16 +598,20 @@ def main():
                                                 disabled=True,
                                                 key=f"doc_{i}_original",
                                             )
-                                        
+
                                         with tab3:
                                             if "metadata" in doc:
                                                 st.json(doc.get("metadata", {}))
                                             else:
-                                                st.write("No additional metadata available")
+                                                st.write(
+                                                    "No additional metadata available"
+                                                )
                                     else:
                                         # Single content version - show in simplified tab
-                                        tab1, tab2 = st.tabs(["📄 Content", "ℹ️ Details"])
-                                        
+                                        tab1, tab2 = st.tabs(
+                                            ["📄 Content", "ℹ️ Details"]
+                                        )
+
                                         with tab1:
                                             st.text_area(
                                                 "Abstract/Content",
@@ -597,12 +620,14 @@ def main():
                                                 disabled=True,
                                                 key=f"doc_{i}_content",
                                             )
-                                        
+
                                         with tab2:
                                             if "metadata" in doc:
                                                 st.json(doc.get("metadata", {}))
                                             else:
-                                                st.write("No additional metadata available")
+                                                st.write(
+                                                    "No additional metadata available"
+                                                )
                                 else:
                                     # Handle simple text document
                                     st.text_area(
