@@ -3,8 +3,8 @@ import numpy as np
 import yaml
 from dotenv import load_dotenv
 
-from src.loaders.data_loader import download, filter_abstracts, chunk_texts_with_index
-from src.loaders.embedding import embed_chunks
+from src.loaders.data_loader import download, filter_abstracts
+from src.loaders.embedding import chunk_texts_with_index, embed_chunks
 from src.connections.pinecone_db import pinecone_upload
 
 
@@ -64,6 +64,11 @@ def main():
 
     # set seed
     np.random.seed(42)
+
+    # Check if embeddings were successfully generated
+    if embeddings is None:
+        print("Embeddings generation failed. Exiting pipeline.")
+        return
 
     # Randomly select embeddings
     chunks_selected = chunk_df.sample(n=10000, random_state=42)

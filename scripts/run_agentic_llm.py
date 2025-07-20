@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 
 from src.models import load_all_components
 from src.core import build_rag_graph
-from src.visualization import visualize_graph
 
 
 def main():
@@ -52,10 +51,6 @@ def main():
     rag_graph = build_rag_graph(
         splits, index, gemini_llm, embedder, config, gemini_model
     )
-
-    # Visualize the graph
-    graph_output_path = os.path.join(output_dir, config["fine_tuned_graph_file_name"])
-    visualize_graph(rag_graph, graph_output_path)
 
     print("LangGraph RAG System initialized")
     print("Enter 'exit' to quit the program.")

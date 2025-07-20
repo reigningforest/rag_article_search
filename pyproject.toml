@@ -8,13 +8,17 @@ packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = ">=3.11, <3.13"
-torch = ">=2.5.1"
 python-dotenv = ">=1.0.1"
 pyyaml = ">=6.0.1"
 kaggle = ">=1.6.14"
 kagglehub = ">=0.2.0"
 pandas = ">=2.2.2"
 tqdm = ">=4.66.4"
+numpy = ">=1.24.0"
+streamlit = ">=1.28.0"
+fastembed = ">=0.3.1"
+sentence-transformers = ">=2.2.2"
+onnxruntime = ">=1.16.0"
 langchain = ">=0.2.5"
 langchain-text-splitters = ">=0.2.1"
 langchain-huggingface = ">=0.0.3"
@@ -29,6 +33,17 @@ pytest = "^8.4.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.12.0"
+
+[tool.poetry.group.gpu.dependencies]
+onnxruntime-gpu = ">=1.16.0"
+torch = {version = ">=2.5.1", source = "pytorch"}
+torchvision = {version = "*", source = "pytorch"}
+torchaudio = {version = "*", source = "pytorch"}
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu124"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]

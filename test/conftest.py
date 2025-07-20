@@ -11,7 +11,7 @@ from unittest.mock import Mock
 from typing import Dict, Any
 
 # Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
 @pytest.fixture
@@ -58,17 +58,9 @@ def mock_pinecone_index():
     """Mock Pinecone index for testing."""
     mock_index = Mock()
     mock_index.query.return_value = {
-        'matches': [
-            {
-                'id': 'test_id_1',
-                'score': 0.9,
-                'metadata': {'text': 'Test abstract 1'}
-            },
-            {
-                'id': 'test_id_2', 
-                'score': 0.8,
-                'metadata': {'text': 'Test abstract 2'}
-            }
+        "matches": [
+            {"id": "test_id_1", "score": 0.9, "metadata": {"text": "Test abstract 1"}},
+            {"id": "test_id_2", "score": 0.8, "metadata": {"text": "Test abstract 2"}},
         ]
     }
     return mock_index
@@ -88,17 +80,17 @@ def sample_abstracts():
     """Sample abstract data for testing."""
     return [
         {
-            'id': 'test_id_1',
-            'title': 'Test Paper 1',
-            'abstract': 'This is a test abstract about machine learning.',
-            'categories': 'cs.LG'
+            "id": "test_id_1",
+            "title": "Test Paper 1",
+            "abstract": "This is a test abstract about machine learning.",
+            "categories": "cs.LG",
         },
         {
-            'id': 'test_id_2',
-            'title': 'Test Paper 2', 
-            'abstract': 'This is another test abstract about neural networks.',
-            'categories': 'cs.NE'
-        }
+            "id": "test_id_2",
+            "title": "Test Paper 2",
+            "abstract": "This is another test abstract about neural networks.",
+            "categories": "cs.NE",
+        },
     ]
 
 
@@ -109,7 +101,7 @@ def sample_queries():
         "What is machine learning?",
         "Explain neural networks",
         "How does deep learning work?",
-        "What are the applications of AI?"
+        "What are the applications of AI?",
     ]
 
 
@@ -122,18 +114,18 @@ def sample_rag_state():
         "rewrites": [
             "What is machine learning?",
             "Define machine learning",
-            "Explain ML concepts"
+            "Explain ML concepts",
         ],
         "documents": [
             "Machine learning is a subset of artificial intelligence...",
-            "ML algorithms learn patterns from data..."
+            "ML algorithms learn patterns from data...",
         ],
         "simplified_docs": [
             "Machine learning helps computers learn from data.",
-            "ML finds patterns in information."
+            "ML finds patterns in information.",
         ],
         "response": "Machine learning is a field of AI that enables computers to learn and improve from experience without being explicitly programmed.",
-        "current_step": "complete"
+        "current_step": "complete",
     }
 
 
@@ -152,7 +144,7 @@ def mock_prompts():
         "classification_prompt": "Does this query need arXiv papers? Query: {query}",
         "rewrite_prompt": "Rewrite this query in 3 different ways: {query}",
         "simplification_prompt": "Simplify this text: {text}",
-        "generation_prompt": "Answer this question using the context: {query}\n\nContext: {context}"
+        "generation_prompt": "Answer this question using the context: {query}\n\nContext: {context}",
     }
 
 
@@ -171,19 +163,19 @@ def mock_torch_device():
 
 class MockLangGraphState:
     """Mock LangGraph state for testing."""
-    
+
     def __init__(self, initial_state: Dict[str, Any]):
         self._state = initial_state
-    
+
     def __getitem__(self, key):
         return self._state[key]
-    
+
     def __setitem__(self, key, value):
         self._state[key] = value
-    
+
     def get(self, key, default=None):
         return self._state.get(key, default)
-    
+
     def update(self, updates: Dict[str, Any]):
         self._state.update(updates)
 

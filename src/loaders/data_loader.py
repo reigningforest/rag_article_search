@@ -21,6 +21,21 @@ def download(dataset_kaggle: str, data_dir: str, dl_file_name: str) -> tuple[str
         tuple[str, str]: Tuple of (data_dir_path, data_file_path)
     """
     logger.info("DOWNLOAD START!")
+
+    # Check Kaggle credentials - Kaggle uses kaggle.json file for authentication
+    kaggle_config_path = os.path.expanduser("~/.kaggle/kaggle.json")
+    if not os.path.exists(kaggle_config_path):
+        raise ValueError(
+            "Kaggle credentials not found. Please:\n"
+            "1. Go to https://www.kaggle.com/settings\n"
+            "2. Scroll to 'API' section and click 'Create New Token'\n"
+            "3. Download kaggle.json file\n"
+            "4. Place it at: ~/.kaggle/kaggle.json (Linux/Mac) or C:\\Users\\{username}\\.kaggle\\kaggle.json (Windows)\n"
+            "5. Set permissions: chmod 600 ~/.kaggle/kaggle.json (Linux/Mac only)"
+        )
+    else:
+        logger.info("Using Kaggle credentials from ~/.kaggle/kaggle.json")
+
     # Get root directory
     root_dir = os.path.dirname(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,18 +52,22 @@ def download(dataset_kaggle: str, data_dir: str, dl_file_name: str) -> tuple[str
     data_file_path = os.path.join(data_dir_path, dl_file_name)
     if os.path.exists(data_file_path):
         logger.info(f"Dataset already downloaded to {data_dir_path}")
-
         return data_dir_path, data_file_path
 
-    dl_dir = kagglehub.dataset_download(dataset_kaggle)
+    try:
+        dl_dir = kagglehub.dataset_download(dataset_kaggle)
+        logger.info(f"Files downloaded to {dl_dir}")
 
-    logger.info(f"Files downloaded to {dl_dir}")
+        # Move files from download directory to data directory
+        src_file = os.path.join(dl_dir, dl_file_name)
+        os.rename(src_file, data_file_path)
 
-    # Move files from download directory to data directory
-    src_file = os.path.join(dl_dir, dl_file_name)
-    os.rename(src_file, data_file_path)
-
-    logger.info(f"Files moved to {data_dir_path}")
+        logger.info(f"Files moved to {data_dir_path}")
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to download dataset: {e}\n"
+            "Please check your Kaggle credentials and internet connection."
+        )
 
     return data_dir_path, data_file_path
 
@@ -80,8 +99,10 @@ def _clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Cleaned DataFrame
     """
-    df["update_date"] = pd.to_datetime(df["update_date"])
-    df["title"] = df["title"].apply(lambda x: x.strip())
+    df = df.copy()  # Avoid modifying original DataFrame
+    df["update_date"] = pd.to_datetime(df["update_date"], errors="coerce")
+    df["title"] = df["title"].astype(str).str.strip()
+    return df
     return df
 
 

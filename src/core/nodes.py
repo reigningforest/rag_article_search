@@ -18,7 +18,7 @@ def create_classify_node(gemini_model, classification_prompt: str):
 
         # Format the prompt with the query
         formatted_prompt = classification_prompt.format(query=query)
-        
+
         # Query Gemini directly
         content = query_gemini(gemini_model, formatted_prompt).lower().strip()
         needs_arxiv = content == "yes"
@@ -39,7 +39,7 @@ def create_rewrite_node(gemini_model, rewrite_prompt: str):
 
         # Format the prompt with the query
         formatted_prompt = rewrite_prompt.format(query=query)
-        
+
         # Query Gemini directly
         rewrites_text = query_gemini(gemini_model, formatted_prompt)
         rewrites = [r.strip() for r in rewrites_text.split("\n") if r.strip()]
@@ -102,7 +102,7 @@ def create_simplify_abstracts_node(gemini_model, simplifier_prompt: str):
         for doc in tqdm(documents, desc="Simplifying abstracts"):
             # Format the prompt with the abstract
             formatted_prompt = simplifier_prompt.format(abstract=doc["text"])
-            
+
             # Get simplified version of the abstract using Gemini
             simplified_text = query_gemini(gemini_model, formatted_prompt)
 
@@ -140,9 +140,7 @@ def create_generate_response_node(gemini_model, final_prompt: str):
 
         # Format the final prompt with all variables
         formatted_prompt = final_prompt.format(
-            query=query, 
-            context=formatted_docs, 
-            rewrites=formatted_rewrites
+            query=query, context=formatted_docs, rewrites=formatted_rewrites
         )
 
         # Query Gemini directly

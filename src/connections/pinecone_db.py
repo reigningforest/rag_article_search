@@ -39,6 +39,7 @@ def _check_and_create_index(
         spec=ServerlessSpec(cloud=pc_cloud, region=pc_region),
     )
 
+
 def _prepare_vectors(embeddings: np.ndarray) -> list[Vector]:
     """
     Prepare vectors for upsert to Pinecone.

@@ -1,253 +1,272 @@
-# Agentic RAG: A Modular Framework for Advanced Retrieval-Augmented Generation
+# Agentic RAG: Web-Based Retrieval-Augmented Generation System
 
-This repository contains a modular, advanced Retrieval-Augmented Generation (RAG) system that leverages agentic components and Google Gemini to enhance the quality of responses from Large Language Models (LLMs).
+An intelligent web application for searching and analyzing ArXiv research papers using advanced Retrieval-Augmented Generation (RAG) with Google Gemini. Features a user-friendly Streamlit interface with smart data management and query processing.
 
 ## Table of Contents
-- [Agentic RAG: A Modular Framework for Advanced Retrieval-Augmented Generation](#agentic-rag-a-modular-framework-for-advanced-retrieval-augmented-generation)
+- [Agentic RAG: Web-Based Retrieval-Augmented Generation System](#agentic-rag-web-based-retrieval-augmented-generation-system)
   - [Table of Contents](#table-of-contents)
+  - [Quick Start](#quick-start)
   - [Project Overview](#project-overview)
   - [Features](#features)
   - [System Architecture](#system-architecture)
-  - [Project Structure](#project-structure)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Environment Variables](#environment-variables)
-    - [Data Setup](#data-setup)
+  - [Installation](#installation)
+  - [Environment Variables](#environment-variables)
   - [Usage](#usage)
-    - [Interactive Mode](#interactive-mode)
-    - [Batch Processing](#batch-processing)
-  - [Docker Setup](#docker-setup)
-    - [Prerequisites for Docker](#prerequisites-for-docker)
-    - [Production Deployment](#production-deployment)
-    - [Manual Docker Build](#manual-docker-build)
-    - [Development with Docker](#development-with-docker)
+  - [Project Structure](#project-structure)
   - [Configuration](#configuration)
+  - [Performance Notes](#performance-notes)
   - [Testing](#testing)
-    - [Test Structure](#test-structure)
-  - [Additional Features](#additional-features)
-    - [RAG Comparison Framework](#rag-comparison-framework)
-    - [Legacy Scripts](#legacy-scripts)
-  - [API Documentation](#api-documentation)
-    - [Core Components](#core-components)
-    - [Key Node Functions](#key-node-functions)
-    - [Workflow Routing](#workflow-routing)
+  - [Troubleshooting](#troubleshooting)
   - [Contributing](#contributing)
   - [License](#license)
-  - [Acknowledgments](#acknowledgments)
+
+## Quick Start
+
+1. **Install dependencies:**
+   ```bash
+   poetry install  # or pip install -r requirements.txt
+   ```
+
+2. **Set up environment variables:**
+   ```bash
+   # Create .env file with your API keys
+   GEMINI_API_KEY=your_gemini_api_key
+   PINECONE_API_KEY=your_pinecone_api_key
+   ```
+
+3. **Set up Kaggle authentication:**
+   - Download `kaggle.json` from [Kaggle Settings](https://www.kaggle.com/settings) → API
+   - Place at: `~/.kaggle/kaggle.json` (Linux/Mac) or `C:\Users\{username}\.kaggle\kaggle.json` (Windows)
+
+3. **Launch the web application:**
+   ```bash
+   streamlit run streamlit_app.py
+   ```
+
+4. **First time setup:** Use the web interface to download and process ArXiv data
+5. **Start querying:** Ask questions about research papers!
 
 ## Project Overview
 
-This project implements a modular agentic RAG system designed to improve question-answering performance on academic papers. The system uses intelligent agents to classify queries, rewrite them for better retrieval, and simplify retrieved content using Google Gemini before generating final responses.
+This project provides a web-based interface for intelligent research paper search and analysis. The system combines advanced RAG techniques with Google Gemini AI to deliver accurate, contextual answers about ArXiv research papers. 
+
+**Key Innovation:** Smart data management - the system only processes expensive data operations when you explicitly choose to, making it lightweight and cost-effective for regular use.
 
 ## Features
 
-- **🤖 Agentic Components**: Query classifier, rewriter, and Gemini-powered processing
-- **🏗️ Modular Architecture**: Clean separation of concerns with dedicated modules
-- **🔄 LangGraph Workflow**: Visual workflow management with conditional routing
+- **🌐 Web Interface**: Clean Streamlit app - single entry point for everything
+- **🧠 Smart Data Detection**: Automatically shows data setup or query interface based on data availability
+- **💰 Cost-Conscious**: No automatic expensive operations - you control when data processing happens
+- **🤖 Agentic Components**: Intelligent query classification, rewriting, and processing
 - **☁️ Google Gemini Integration**: All LLM operations powered by Google Gemini 2.0 Flash
-- **🗃️ Vector Database**: Pinecone integration for semantic search with cached embeddings
-- **📊 Batch Processing**: Support for processing multiple queries with CSV output
-- **🐳 Docker Support**: Containerized deployment with development and production configurations
-- **🧪 Comprehensive Testing**: Full test suite with pytest integration
+- **🗃️ Vector Database**: Pinecone integration for semantic search
+- **� Optional Data Refresh**: Button to update data when needed
+- **� Query History**: Track your research queries
+- **⚡ GPU/CPU Support**: Automatic detection with CPU fallback
 
 ## System Architecture
 
 The agentic RAG system follows these steps:
 
-1. **Query Classification**: Determines if query requires arXiv paper retrieval using Gemini
-2. **Query Rewriting**: Generates multiple query variations for better retrieval using Gemini
-3. **Document Retrieval**: Semantic search using concatenated queries with Pinecone vector database
-4. **Abstract Simplification**: Gemini-powered simplification for better comprehension
-5. **Response Generation**: Final answer generation using Gemini with enhanced context
+1. **Smart Interface**: Web app detects if processed data exists, shows appropriate interface
+2. **Optional Data Pipeline**: User-triggered download and processing of ArXiv papers 
+3. **Query Classification**: Determines if query requires arXiv paper retrieval using Gemini
+4. **Query Rewriting**: Generates multiple query variations for better retrieval using Gemini
+5. **Document Retrieval**: Semantic search using concatenated queries with Pinecone vector database
+6. **Response Generation**: Final answer generation using Gemini with enhanced context
 
-All LLM operations (classification, rewriting, simplification, and final response) are powered by Google Gemini 2.0 Flash.
+**Workflow Modes:**
+- **First Time**: Data Pipeline Button → RAG Interface
+- **Normal Use**: RAG Interface with optional refresh
 
 ![System Workflow](./output/fine_tuned_rag_graph.png)
+
+## Installation
+
+### Using Poetry (Recommended)
+```bash
+# Clone repository
+git clone <repository-url>
+cd rag_article_search
+
+# Install dependencies
+poetry install
+
+# For GPU support (optional, faster embeddings)
+poetry install --with gpu
+```
+
+### Using pip
+```bash
+# Clone and enter directory
+git clone <repository-url>
+cd rag_article_search
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Required API Keys
+GEMINI_API_KEY=your_gemini_api_key_here
+PINECONE_API_KEY=your_pinecone_api_key_here
+
+# Optional: Pinecone environment (if using legacy Pinecone)
+PINECONE_ENVIRONMENT=your_pinecone_environment
+```
+
+**Getting API Keys:**
+- **Gemini**: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **Pinecone**: Get from [Pinecone Console](https://app.pinecone.io/)
+
+### Kaggle Setup (Required for Data Download)
+
+Kaggle authentication uses the `kaggle.json` file method:
+
+1. **Get your Kaggle API credentials:**
+   - Go to [Kaggle Account Settings](https://www.kaggle.com/settings)
+   - Scroll to "API" section  
+   - Click "Create New Token"
+   - This downloads `kaggle.json` file
+
+2. **Place the kaggle.json file:**
+   - **Windows**: `C:\Users\{username}\.kaggle\kaggle.json`
+   - **Linux/Mac**: `~/.kaggle/kaggle.json`
+
+3. **Set permissions (Linux/Mac only):**
+   ```bash
+   chmod 600 ~/.kaggle/kaggle.json
+   ```
+
+The `kaggle.json` file contains your username and API key in this format:
+```json
+{
+  "username": "your_username",
+  "key": "your_api_key"
+}
+```
+
+## Usage
+
+### Single Command Launch
+```bash
+streamlit run streamlit_app.py
+```
+
+### First Time Setup
+1. Launch the web app
+2. The interface will show "No processed data found"
+3. Click **"Run Data Pipeline"** to download and process ArXiv papers
+4. Wait for processing to complete (may take several hours)
+5. Start querying!
+
+### Normal Usage
+1. Launch the web app
+2. System automatically loads existing processed data
+3. Ask questions in the query interface
+4. View responses with source documents
+5. Optional: Click **"Refresh Data"** to update with newer papers
+
+### Graph Visualization
+
+Generate a visual representation of the RAG workflow graph independently:
+
+```bash
+# Generate graph visualization
+python -m src.visualization.graph_viz
+```
+
+This command will:
+- Load all system components (embedder, LLM, Pinecone index)
+- Build the complete RAG graph workflow
+- Generate a PNG visualization showing the workflow structure
+- Save the output to `output/fine_tuned_rag_graph.png`
+
+**Prerequisites for graph visualization:**
+- All dependencies installed
+- Valid `.env` file with `GEMINI_API_KEY`
+- Pinecone index accessible
+- Processed data files available (`chunked_abstracts.pkl`)
+
+The generated graph shows the complete agentic RAG workflow including query classification, rewriting, retrieval, and response generation nodes.
 
 ## Project Structure
 
 ```
 rag_article_search/
-├── src/                          # Main source code
-│   ├── core/                     # Core RAG components
-│   │   ├── __init__.py
+├── streamlit_app.py              # 🌐 Main web application (single entry point)
+├── src/                          # Core system modules
+│   ├── core/                     # RAG workflow components
 │   │   ├── state.py              # RAG state definition
 │   │   ├── nodes.py              # LangGraph node functions
 │   │   └── rag_graph.py          # Graph workflow builder
 │   ├── models/                   # Model management
-│   │   ├── __init__.py
 │   │   └── model_loader.py       # Gemini, embeddings setup
 │   ├── connections/              # External service connections
-│   │   ├── __init__.py
 │   │   ├── pinecone_db.py        # Vector database operations
 │   │   └── gemini_query.py       # Google Gemini integration
-│   ├── loaders/                  # Data loading utilities
-│   │   ├── __init__.py
+│   ├── loaders/                  # Data processing utilities
 │   │   ├── data_loader.py        # Dataset management
 │   │   └── embedding.py          # Embedding operations
-│   ├── processing/               # Data processing utilities
-│   │   └── __init__.py
 │   └── visualization/            # Graph visualization
-│       ├── __init__.py
 │       └── graph_viz.py          # Workflow visualization
-├── test/                         # Comprehensive test suite
-│   ├── test_core/                # Core functionality tests
-│   ├── test_connections/         # Connection tests
-│   ├── test_loaders/             # Data loader tests
-│   ├── test_models/              # Model tests
-│   └── conftest.py               # Test configuration
-├── utils/                        # Utility functions
-│   └── logger.py                 # Logging configuration
-├── scripts/                      # Additional scripts
-│   └── run_pipeline.py           # Data processing pipeline
-├── config/                       # Configuration files
-│   └── config.yaml               # System configuration
-├── main.py                       # Main application entry point
-├── download_filter_embed_upsert.py  # Data preparation script
-├── batch_processor.py            # Batch processing script
-├── requirements.txt              # Python dependencies
+├── scripts/                      # Background processing (used by web app)
+│   ├── get_data_pipeline.py      # Data download and processing
+│   └── run_agentic_llm.py        # RAG system components
+├── config/                       # Configuration
+│   └── config.yaml               # System settings
+├── test/                         # Test suite
+├── data/                         # Processed data storage
+├── output/                       # Results and visualizations
+├── requirements.txt              # Dependencies
 ├── pyproject.toml                # Poetry configuration
-├── Dockerfile                    # Docker configuration
-├── docker-compose.yml            # Docker Compose setup
 └── README.md                     # This file
 ```
 
-## Getting Started
+## Configuration
 
-### Prerequisites
+The system uses `config/config.yaml` for all settings. Key configurations:
 
-- **Python 3.11+**
-- **Kaggle Account** for arXiv dataset access
-- **API Keys**: Pinecone and Google Gemini
-- **Docker** (optional, for containerized deployment)
+```yaml
+# Data Processing
+dataset_kaggle: "Cornell-University/arxiv"
+date: "2021-10-01"  # Filter papers after this date
+chunk_size: 2000
+chunk_overlap: 200
 
-### Installation
+# Embeddings
+fast_embed_name: "BAAI/bge-small-en-v1.5"
+ch_batch_size: 256
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd rag_article_search
-   ```
+# RAG System
+gemini_model_name: "gemini-2.0-flash"
+top_k: 5
 
-2. **Create virtual environment:**
-   ```bash
-   # Using conda
-   conda create -n rag python=3.11
-   conda activate rag
-   
-   # Or using venv
-   python -m venv rag
-   source rag/bin/activate  # Windows: rag\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   # Using pip
-   pip install -r requirements.txt
-   
-   # Or using Poetry (recommended)
-   poetry install
-   ```
-
-### Environment Setup
-
-Set up your environment variables as described in the [Environment Variables](#environment-variables) section.
-
-## Environment Variables
-
-Create a `.env` file in the project root with the following variables:
-
-```env
-PINECONE_API_KEY=your_pinecone_api_key_here
-GEMINI_API_KEY=your_gemini_api_key_here
+# Vector Database
+pc_index: "abstract-index"
+distance_metric: "cosine"
 ```
 
-You can also set these as system environment variables or pass them directly to Docker containers.
+## Performance Notes
 
-### Data Setup
+### GPU vs CPU
+- **GPU (CUDA)**: ~10x faster embeddings, requires `onnxruntime-gpu`
+- **CPU**: Slower but works everywhere, automatic fallback
+- **Detection**: System automatically uses best available option
 
-1. **Download and process data:**
-   ```bash
-   # Using the main data processing script
-   python download_filter_embed_upsert.py
-   
-   # Or using the modular script (recommended)
-   python scripts/run_pipeline.py
-   ```
+### Data Processing Time
+- **Full ArXiv Dataset**: ~2M papers, several hours to process
+- **Filtered Dataset**: ~500K papers (2021-present)
+- **Selected Sample**: 10K chunks for demonstration
 
-This downloads the arXiv dataset from Kaggle, filters it by date (2021+), chunks the abstracts, creates embeddings using BAAI/bge-small-en-v1.5, and uploads them to Pinecone.
-
-## Usage
-
-### Interactive Mode
-
-Run the main application for interactive queries:
-
-```bash
-python main.py
-```
-
-The system will:
-- Load all models and components
-- Generate a workflow visualization
-- Provide an interactive prompt for questions
-
-### Batch Processing
-
-Process multiple queries from the `prompts.txt` file:
-
-```bash
-python batch_processor.py
-```
-
-Results are saved to `output/batch_results_[timestamp].csv` with comparisons across different approaches.
-
-## Docker Setup
-
-The project includes Docker support for easy deployment and development.
-
-### Prerequisites for Docker
-
-- Docker and Docker Compose installed
-- API keys set in `.env` file
-
-### Production Deployment
-
-1. **Build and run with Docker Compose:**
-   ```bash
-   docker-compose up --build
-   ```
-
-2. **Run specific service:**
-   ```bash
-   # Production service
-   docker-compose up agentic-rag
-   
-   # Development service (with live code mounting)
-   docker-compose --profile dev up agentic-rag-dev
-   ```
-
-3. **Run interactively:**
-   ```bash
-   docker-compose run --rm agentic-rag
-   ```
-
-### Manual Docker Build
-
-1. **Build the image:**
-   ```bash
-   docker build -t agentic-rag .
-   ```
-
-2. **Run the container:**
-   ```bash
-   docker run -it --rm \
-     -v $(pwd)/data:/app/data \
-     -v $(pwd)/output:/app/output \
-     -v $(pwd)/.env:/app/.env:ro \
-     -e PINECONE_API_KEY=$PINECONE_API_KEY \
-     -e GEMINI_API_KEY=$GEMINI_API_KEY \
+### Memory Requirements
+- **Data Pipeline**: ~8GB RAM recommended
+- **RAG Queries**: ~2GB RAM for inference
+- **Storage**: ~10GB for processed data
      agentic-rag
    ```
 
@@ -275,50 +294,86 @@ top_k: 5
 
 # Database Configuration
 pc_index: "abstract-index"
-distance_metric: "cosine"
+## Testing
 
-# Directory Configuration
-data_dir: "data"
-output_dir: "output"
-embedding_cache_dir: "embedding_cache"
+Run the test suite to verify system functionality:
 
-# Data Processing
-date: "2021-10-01"              # Filter papers from this date
-chunk_size: 2000                # Text chunk size
-chunk_overlap: 200              # Overlap between chunks
-min_text_len: 50                # Minimum text length
+```bash
+# Using Poetry
+poetry run pytest
 
-# Prompts (customizable for different use cases)
-classification_prompt: |
-  # Custom classification logic for determining ArXiv retrieval
-rewrite_prompt: |
-  # Custom rewrite logic for query enhancement
-final_prompt: |
-  # Custom final response generation prompt
+# Using pip
+pytest
+
+# Run specific tests
+pytest test/test_core/
+pytest test/test_loaders/
+
+# Run with coverage
+pytest --cov=src
 ```
 
-## API Documentation
+The test suite covers:
+- Core RAG functionality
+- Data loading and processing  
+- Model integration
+- API connections
 
-### Core Components
+## Troubleshooting
 
-- **`RAGState`**: TypedDict defining workflow state with query, documents, response, etc.
-- **`build_rag_graph()`**: Main workflow builder creating LangGraph state machine
-- **`load_all_components()`**: Component initialization for models, embeddings, and connections
-- **`visualize_graph()`**: Workflow visualization generator
+### Common Issues
 
-### Key Node Functions
+1. **"No processed data found"**
+   - Solution: Click "Run Data Pipeline" in the web interface
+   - First-time setup requires data download and processing
 
-- **Classification Node**: `create_classify_node()` - Determines if ArXiv retrieval is needed
-- **Rewrite Node**: `create_rewrite_node()` - Generates query variations using Gemini
-- **Retrieval Node**: `create_retrieve_node()` - Semantic document search with Pinecone
-- **Simplification Node**: `create_simplify_abstracts_node()` - Gemini-powered text simplification
-- **Generation Node**: `create_generate_response_node()` - Final answer synthesis
-- **Direct Answer Node**: `create_direct_response_node()` - Direct Gemini responses for non-ArXiv queries
+2. **"CUDA not available" or slow embeddings**
+   - Solution: Install GPU support: `poetry install --with gpu`
+   - Or accept CPU processing (slower but works)
 
-### Workflow Routing
+3. **API Key errors**
+   - Solution: Check your `.env` file has all required keys
+   - Verify keys are valid and have sufficient quota
 
-- **`route_based_on_classification()`**: Conditional routing based on classification results
-- **Conditional Edges**: Smart routing between ArXiv-enhanced and direct response paths
+4. **Kaggle authentication failed**
+   - **Solution**: Ensure `kaggle.json` is in the correct location
+   - **Windows**: `C:\Users\{username}\.kaggle\kaggle.json`
+   - **Linux/Mac**: `~/.kaggle/kaggle.json`
+   - **Get credentials**: [Kaggle Account Settings](https://www.kaggle.com/settings) → API → Create New Token
+   - **Permissions**: Run `chmod 600 ~/.kaggle/kaggle.json` (Linux/Mac)
+
+5. **"Kaggle credentials not found" error**
+   - **Solution**: Check that `kaggle.json` exists in `~/.kaggle/` directory
+   - **Content should be**: `{"username": "your_username", "key": "your_api_key"}`
+   - **Alternative**: The system will show clear error message with instructions
+
+5. **Memory errors during data processing**
+   - Solution: Reduce batch sizes in `config/config.yaml`:
+     ```yaml
+     ch_batch_size: 128  # Reduce from 256
+     pc_batch_size: 250  # Reduce from 500
+     ```
+
+6. **Streamlit app won't start**
+   - Solution: `pip install streamlit` or `poetry install`
+   - Check Python version (3.11+ required)
+
+7. **pandas type errors**
+   - Solution: These are usually type checker warnings, not runtime errors
+   - The code should still work despite Pylance/mypy warnings
+
+8. **Graph visualization fails**
+   - Solution: Ensure all components are properly configured
+   - Check that processed data exists (`chunked_abstracts.pkl` in data directory)
+   - Verify API keys and Pinecone connectivity
+   - The visualization requires the same setup as the main RAG system
+
+### Getting Help
+
+1. Check the web interface status sidebar for dependency issues
+2. View logs in terminal where you launched the app  
+3. Verify all environment variables are set correctly
+4. Ensure sufficient disk space for data processing
 
 ## Contributing
 
@@ -331,60 +386,3 @@ final_prompt: |
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
-
-## Acknowledgments
-
-- [arXiv Dataset](https://www.kaggle.com/datasets/Cornell-University/arxiv) for research papers
-- [Google AI](https://ai.google.dev/) for Gemini 2.0 Flash integration
-- [Pinecone](https://www.pinecone.io/) for vector database services
-- [LangChain](https://langchain.com/) and [LangGraph](https://langchain-ai.github.io/langgraph/) for workflow orchestration
-- [BAAI](https://huggingface.co/BAAI) for BGE embedding models
-- [Hugging Face](https://huggingface.co/) for model hosting and transformers ecosystem
-
-## Testing
-
-The project includes a comprehensive test suite using pytest:
-
-```bash
-# Run all tests
-pytest
-
-# Run specific test modules
-pytest test/test_core/
-pytest test/test_connections/
-pytest test/test_loaders/
-
-# Run with coverage
-pytest --cov=src
-
-# Run unit tests with the actual RAG system
-python test/unit_test.py
-```
-
-### Test Structure
-
-- **`test/test_core/`**: Core RAG functionality tests
-- **`test/test_connections/`**: Pinecone and Gemini connection tests  
-- **`test/test_loaders/`**: Data loading and embedding tests
-- **`test/test_models/`**: Model loading tests
-- **`test/conftest.py`**: Shared test fixtures and configuration
-
-## Additional Features
-
-### RAG Comparison Framework
-
-The `rag_comparison/` directory contains comparative implementations for research purposes:
-
-- **Simple RAG**: Basic retrieval-augmented generation
-- **Advanced RAG**: Multi-query retrieval with classification
-- **Batch Processing**: Comparative analysis across different RAG approaches
-
-### Legacy Scripts
-
-The project includes standalone scripts for compatibility:
-
-- **`download_filter_embed_upsert.py`**: Legacy data processing pipeline
-- **`batch_processor.py`**: Multi-approach comparison tool
-- **`unit_test_prep.py`**: Test data preparation utilities
-
-These provide alternative entry points and comparison baselines for the modular system.
