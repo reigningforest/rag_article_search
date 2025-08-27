@@ -1,11 +1,15 @@
+"""
+Download and filtering of kaggle dataset
+"""
+
 import json
 import os
 
 import kagglehub
 import pandas as pd
-from utils.logger import get_logger
+from src.connections.logger import get_shared_logger
 
-logger = get_logger(__name__)
+logger = get_shared_logger(__name__)
 
 
 def download(dataset_kaggle: str, data_dir: str, dl_file_name: str) -> tuple[str, str]:
@@ -25,7 +29,7 @@ def download(dataset_kaggle: str, data_dir: str, dl_file_name: str) -> tuple[str
     # Check Kaggle credentials - Kaggle uses kaggle.json file for authentication
     kaggle_config_path = os.path.expanduser("~/.kaggle/kaggle.json")
     if not os.path.exists(kaggle_config_path):
-        raise ValueError(
+        logger.error(
             "Kaggle credentials not found. Please:\n"
             "1. Go to https://www.kaggle.com/settings\n"
             "2. Scroll to 'API' section and click 'Create New Token'\n"
@@ -33,6 +37,7 @@ def download(dataset_kaggle: str, data_dir: str, dl_file_name: str) -> tuple[str
             "4. Place it at: ~/.kaggle/kaggle.json (Linux/Mac) or C:\\Users\\{username}\\.kaggle\\kaggle.json (Windows)\n"
             "5. Set permissions: chmod 600 ~/.kaggle/kaggle.json (Linux/Mac only)"
         )
+        exit(1)
     else:
         logger.info("Using Kaggle credentials from ~/.kaggle/kaggle.json")
 

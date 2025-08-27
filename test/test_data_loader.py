@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pandas as pd
 
-from src.loaders.data_loader import (
+from src.loaders.download import (
     download,
     filter_abstracts,
     _read_json_lines,

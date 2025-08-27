@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 # Internal imports
 from scripts.get_data_pipeline import main as run_pipeline_main
 from src.models import load_all_components
-from src.core import build_rag_graph
+from src.rag import build_rag_graph
 
 # Load environment variables at module level
 load_dotenv()
@@ -217,8 +217,9 @@ def query_rag_system(rag_graph, query):
         initial_state = {
             "query": query,
             "needs_arxiv": False,
-            "rewrites": [],
+            "rewrite": "",
             "documents": [],
+            "simplified_documents": [],
             "response": "",
             "current_step": "initialized",
             "last_completed_step": "",
@@ -246,8 +247,8 @@ def query_rag_system_with_progress(rag_graph, query, progress_bar, status_text):
             "classify": (15, "🧠 Analyzing query..."),
             "rewrite_query": (35, "📝 Generating query variations..."),
             "retrieve": (55, "🔍 Retrieving relevant documents..."),
-            "simplify_abstracts": (80, "✨ Simplifying abstracts..."),
-            "generate_rag_response": (95, "🤖 Generating response..."),
+            "generate_rag_response": (75, "🤖 Generating response..."),
+            "simplify_abstracts": (95, "✨ Simplifying abstracts..."),
             "direct_answer": (95, "🤖 Generating direct response..."),
         }
 
@@ -268,8 +269,9 @@ def query_rag_system_with_progress(rag_graph, query, progress_bar, status_text):
         initial_state = {
             "query": query,
             "needs_arxiv": False,
-            "rewrites": [],
+            "rewrite": "",
             "documents": [],
+            "simplified_documents": [],
             "response": "",
             "current_step": "initialized",
             "last_completed_step": "",
@@ -488,52 +490,43 @@ def main():
                 )
                 st.write(response)
 
-                # Show query variations first (above source documents)
+                # Show query rewrite first (above source documents)
                 if (
                     isinstance(st.session_state.last_result, dict)
-                    and "rewrites" in st.session_state.last_result
-                    and st.session_state.last_result["rewrites"]
+                    and "rewrite" in st.session_state.last_result
+                    and st.session_state.last_result["rewrite"]
                 ):
                     with st.expander(
-                        f"🔄 Query Rewrites ({len(st.session_state.last_result['rewrites'])} variations)",
+                        "🔄 Enhanced Query Perspective",
                         expanded=False,
                     ):
                         st.markdown("**🎯 Original Query:**")
                         st.info(f"_{st.session_state.last_query}_")
 
-                        st.markdown("**🔄 AI-Generated Variations:**")
+                        st.markdown("**🔄 Enhanced Query Perspective:**")
                         st.markdown(
-                            "*These variations help find more relevant papers by exploring different ways to express your question.*"
+                            "*This enhanced perspective helps find more relevant papers by optimizing the search query.*"
                         )
 
-                        # Handle rewrites - should now be a proper list from the rewrite node
-                        rewrites = st.session_state.last_result["rewrites"]
+                        # Display the single rewrite
+                        rewrite = st.session_state.last_result["rewrite"]
+                        st.markdown(f"• {rewrite}")
 
-                        # Simple handling since rewrites should already be a clean list
-                        if isinstance(rewrites, list):
-                            rewrite_list = rewrites
-                        else:
-                            # Fallback if for some reason it's still a string
-                            rewrite_list = [str(rewrites)]
-
-                        # Display rewrites as a clean numbered list
-                        for i, rewrite in enumerate(rewrite_list, 1):
-                            if rewrite.strip():  # Only show non-empty rewrites
-                                st.markdown(f"**{i}.** {rewrite.strip()}")
-
-                # Show additional info in expandable sections
+                # Show additional info in expandable sections - prefer simplified documents
+                display_documents = st.session_state.last_result.get("simplified_documents", [])
+                if not display_documents:
+                    display_documents = st.session_state.last_result.get("documents", [])
+                
                 if (
                     isinstance(st.session_state.last_result, dict)
-                    and "documents" in st.session_state.last_result
-                    and st.session_state.last_result["documents"]
+                    and display_documents
                 ):
+                    simplified_text = " (Simplified)" if "simplified_documents" in st.session_state.last_result and st.session_state.last_result["simplified_documents"] else ""
                     with st.expander(
-                        f"📄 Source Documents ({len(st.session_state.last_result['documents'])} found)",
+                        f"📄 Source Documents{simplified_text} ({len(display_documents)} found)",
                         expanded=False,
                     ):
-                        for i, doc in enumerate(
-                            st.session_state.last_result["documents"], 1
-                        ):
+                        for i, doc in enumerate(display_documents, 1):
                             with st.container():
                                 # Create a styled header for each document
                                 st.markdown(f"### 📋 **Source {i}**")

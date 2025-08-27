@@ -4,8 +4,8 @@ Tests for RAG graph builder functionality.
 
 from typing import cast
 from unittest.mock import Mock, patch
-from src.core.state import RAGState
-from src.core.rag_graph import build_rag_graph
+from src.rag.state import RAGState
+from src.rag.rag_graph import build_rag_graph
 
 
 def create_test_state(**kwargs) -> RAGState:
@@ -57,7 +57,7 @@ class TestRAGGraphBuilder:
         assert graph is not None
         assert hasattr(graph, "invoke")
 
-    @patch("src.core.rag_graph.StateGraph")
+    @patch("src.rag.rag_graph.StateGraph")
     def test_graph_node_addition(self, mock_state_graph_class):
         """Test that all nodes are added to the graph."""
         # Mock StateGraph
@@ -102,7 +102,7 @@ class TestRAGGraphBuilder:
         for node in expected_nodes:
             assert node in actual_calls
 
-    @patch("src.core.rag_graph.StateGraph")
+    @patch("src.rag.rag_graph.StateGraph")
     def test_graph_edge_addition(self, mock_state_graph_class):
         """Test that all edges are added to the graph."""
         # Mock StateGraph

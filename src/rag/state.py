@@ -10,8 +10,9 @@ class RAGState(TypedDict):
 
     query: str
     needs_arxiv: bool
-    rewrites: List[str]
+    rewrite: str
     documents: List[Dict[str, Any]]
+    simplified_documents: List[Dict[str, Any]]
     response: str
     current_step: str
     progress_callback: Optional[Callable[[str], None]]  # For progress updates

@@ -10,7 +10,7 @@ from langchain.embeddings.cache import CacheBackedEmbeddings
 from langchain.storage import LocalFileStore
 
 from ..connections.gemini_query import setup_gemini
-from utils.logger import get_logger
+from src.connections.logger import get_logger
 
 logger = get_logger(__name__)
 

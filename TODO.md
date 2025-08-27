@@ -4,3 +4,9 @@
 3. Distribute config files
 4. Edit template prompts
 5. Implement docker container support
+6. Make "classification" step's output part of response.
+7. ensure paper's title, authors, and publication year are included in the embedding? OR make some decision on where to include this.
+8. Hybrid Search
+9. Hyde Rewriting
+10. Insert footnotes for citations.
+11. Turn chunking off.

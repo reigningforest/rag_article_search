@@ -1,6 +1,5 @@
 """
-Main application for the Agentic RAG system.
-This is the refactored version using modular components with Gemini.
+CLI application for the Agentic RAG system.
 """
 
 import os
@@ -9,13 +8,16 @@ import torch
 from dotenv import load_dotenv
 
 from src.models import load_all_components
-from src.core import build_rag_graph
+from src.rag import build_rag_graph
+from src.connections.logger import get_shared_logger
+
+logger = get_shared_logger(__name__)
 
 
 def main():
     """Main application entry point."""
     # Load the config file
-    with open("config.yaml", "r") as file:
+    with open("config/config.yaml", "r") as file:
         config = yaml.safe_load(file)
 
     # Load the environment variables
@@ -25,12 +27,6 @@ def main():
     data_dir = config["data_dir"]
     output_dir = config["output_dir"]
 
-    # Get Gemini API key from environment
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if not gemini_api_key:
-        print("GEMINI_API_KEY not found in environment variables.")
-        return
-
     # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -38,9 +34,9 @@ def main():
     # Set the device for embeddings
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if not torch.cuda.is_available():
-        print("CUDA not available. Using CPU for embeddings.")
+        logger.warning("CUDA not available. Using CPU for embeddings.")
     else:
-        print(f"Using device: {device}")
+        logger.info(f"IMPORTANT! Using device: {device}")
 
     # Load all components
     splits, index, gemini_llm, embedder, gemini_model = load_all_components(
@@ -52,21 +48,25 @@ def main():
         splits, index, gemini_llm, embedder, config, gemini_model
     )
 
-    print("LangGraph RAG System initialized")
-    print("Enter 'exit' to quit the program.")
+    logger.info("LangGraph RAG System initialized")
+    logger.info("Enter 'exit' to quit the program.")
 
     # Interactive query loop
     while True:
         query_str = input("Enter a question or type 'exit': ")
-        if query_str == "exit":
+
+        logger.info(f"User query: {query_str}")
+        
+        if query_str.lower() == "exit":
             break
 
         # Initialize state
         initial_state = {
             "query": query_str,
             "needs_arxiv": False,
-            "rewrites": [],
+            "rewrite": "",
             "documents": [],
+            "simplified_documents": [],
             "response": "",
             "current_step": "initialized",
         }
@@ -76,12 +76,19 @@ def main():
             # Get the final result
             result = rag_graph.invoke(initial_state)
 
-            # Print the response
-            print("\nResponse:")
-            print(result["response"])
+            # Log the response
+            logger.info(f"\nResponse: {result['response']}")
+
+            # Log the simplified documents
+            logger.info("SIMPLIFIED SOURCE DOCUMENTS:")
+            for i, doc in enumerate(result["simplified_documents"], 0):
+                logger.info(f"\n---- Document {i+1} ----")
+                logger.info(f"Title: {doc['title']}")
+                logger.info(f"Date: {doc['date']}")
+                logger.info(f"Simplified Abstract: {doc['text']}")
 
         except Exception as e:
-            print(f"Error during execution: {e}")
+            logger.error(f"Error during execution: {e}")
 
 
 if __name__ == "__main__":

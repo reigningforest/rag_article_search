@@ -9,23 +9,29 @@ This project provides a web-based interface for intelligent research paper searc
 The agentic RAG system follows these key steps:
 
 1. **Query Classification**: Determines if query requires arXiv paper retrieval using Gemini
-2. **Query Rewriting**: Generates multiple query variations for better retrieval using Gemini
-3. **Document Retrieval**: Semantic search using concatenated queries with Pinecone vector database
-4. **Abstract Simplification**: AI-powered simplification of complex research abstracts
-5. **Response Generation**: Final answer generation using Gemini with enhanced context
+2. **Query Rewriting**: Generates optimized query variation for better retrieval using Gemini
+3. **Document Retrieval**: Semantic search using rewritten query with Pinecone vector database
+4. **Response Generation**: Final answer generation using Gemini with retrieved abstracts
+5. **Abstract Simplification**: AI-powered simplification of complex abstracts for easier comprehension
 
-The system provides real-time progress tracking throughout the entire workflow.
+The system provides real-time progress tracking and outputs both the main response and simplified source documents.
 
 ## Project Structure
 
 ```
 rag_article_search/
-├── streamlit_app.py              # Main web application
+├── main_app.py                   # Web interface (Streamlit)
+├── main_cli.py                   # Command-line interface
 ├── src/                          # Core system modules
-│   ├── core/                     # RAG workflow components
+│   ├── rag/                      # RAG workflow components
 │   │   ├── state.py              # RAG state definition
-│   │   ├── nodes.py              # LangGraph node functions
-│   │   └── rag_graph.py          # Graph workflow builder
+│   │   ├── rag_graph.py          # Graph workflow builder
+│   │   └── nodes/                # Individual workflow nodes
+│   │       ├── classification.py
+│   │       ├── query_processing.py
+│   │       ├── retrieval.py
+│   │       ├── response_generation.py
+│   │       └── simplify.py
 │   ├── models/                   # Model management
 │   │   └── model_loader.py       # Gemini, embeddings setup
 │   ├── connections/              # External service connections
@@ -77,10 +83,12 @@ This project provides a web-based interface for intelligent research paper searc
 ## Features
 
 - **🌐 Web Interface**: Clean Streamlit app for searching research papers
+- **💻 Multiple Entry Points**: Web UI, CLI, and programmatic access
 - **🤖 Agentic RAG**: Intelligent query processing and response generation
 - **☁️ Google Gemini Integration**: Powered by Google Gemini 2.0 Flash
 - **🗃️ Vector Database**: Pinecone integration for semantic search
-- **� Real-time Progress**: Live progress tracking during processing
+- **📄 Simplified Abstracts**: AI-powered simplification of complex research papers
+- **⏱️ Real-time Progress**: Live progress tracking during processing
 
 ## Installation
 
@@ -114,16 +122,25 @@ PINECONE_API_KEY=your_pinecone_api_key_here
 
 ## Usage
 
-1. **Launch the application:**
-   ```bash
-   streamlit run streamlit_app.py
-   ```
+### Web Interface (Recommended)
+```bash
+streamlit run main_app.py
+```
 
-2. **First time setup:**
-   - Click "Run Data Pipeline" to download and process ArXiv data
-   - Wait for processing to complete (may take several hours)
+### Command Line Interface
+```bash
+python main_cli.py "Your research question here"
+```
 
-3. **Ask questions:**
-   - Enter your research question in the interface
-   - View AI-generated responses with source documents
-   - System shows real-time progress during query processing
+### Programmatic Usage
+```python
+from main_app import main
+result = main("Your research question here")
+```
+
+### First Time Setup
+- Click "Run Data Pipeline" in the web interface to download and process ArXiv data
+- Wait for processing to complete (may take several hours)
+- Then start asking questions about research papers!
+
+The system shows real-time progress and outputs both the main response and simplified source documents.

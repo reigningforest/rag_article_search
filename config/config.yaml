@@ -45,78 +45,74 @@ pc_region: "us-east-1"
 
 # RAG Variables
 gemini_model_name: "gemini-2.0-flash"
-top_k: 5
+top_k: 10
 
-# Prompt Variables
-base_prompt: |
-  Answer {query} using context:
-
-  {context}
-
-  Guidelines:
-  1. Resolve ambiguities using multiple query versions
-  2. Weight recent papers higher
-  3. Cross-validate findings across query variants
-  4. Summarize across query variants
-
-
-rewrite_prompt: |
-  Generate 2 alternative search queries for: {query}
-  Focus on different aspects of the question and use synonyms or related terms.
-  Respond ONLY with the queries in format "<query1> \n <query2>"
 
 classification_prompt: |
-  Analyze "{query}" using the following guidelines:
+  You are a query classifier. Your task is to determine if a user's query requires searching for recent scientific papers (from 2022-2024).
 
-  Determine if 2022-2024 ArXiv papers should be retrieved. Answer YES or NO based on these rules:
+  Analyze the following query: "{query}"
 
-  Answer YES if:
-  1. Time references after 2022: "recent", "last 3 years", "2022-2024", "current", "latest"
-  2. New tech: "new developments", "recent breakthroughs"
-  3. Active research: "LLM quantization", "CRISPR delivery"
-  4. Comparisons: "How has * changed since 2021?"
+  Based on the query's intent, decide if a search is needed.
 
-  Answer NO if:
-  1. Historical: "history of", "discovery of", "origins of", "historical development", "original paper"
-  2. Basic concepts: "principles of", "what is"
-  3. Pre-2022: "before 2022", "traditional methods"
+  Answer YES if the query's intent matches any of these principles:
+  - **
+  - **Recency-focused**: It explicitly asks for recent, current, or state-of-the-art information (e.g., "latest developments," "recent breakthroughs,").
+  - **Evolving Topics**: It is about a rapidly advancing field where new findings are constant (e.g., generative AI, LLM fine-tuning, CRISPR gene editing).
+  - **Modern Comparison**: It asks how a topic has changed or evolved into the modern era (e.g., "how has X improved since 2021?").
 
-  If unclear or conflicting, answer NO.
+  Answer NO if the query's intent matches any of these principles:
+  - **Historical**: It is historical, asking about origins, discoveries, or foundational concepts.
+  - **Fundamental**: It asks for a basic definition or a well-established principle that is unlikely to have changed recently (e.g., "what is gravity?").
 
-  Examples:
-  "What are the latest developments in CRISPR-Cas9?" = YES
-  "What recent breakthroughs in CRISPR-Cas9 have occurred?" = YES
-  "What breakthroughs in CRISPR-Cas9 were made before 2014?" = NO
-  "What is the history of CRISPR-Cas9?" = NO
-  "What is CRISPR-Cas9's basic mechanism?" = NO
-  "What is CRISPR-Cas9?" = NO
+  If the intent is ambiguous or does not clearly fit the YES criteria, default to NO.
 
-  Answer ONLY YES or NO.
+  Respond with ONLY the word YES or NO.
 
-hugging_face_template: |
-  <|im_start|>system
-  You are a technical abstract explainer. Your explanation should:
-    - Use clear, accessible language
-    - Retain all technical terms from the original
-    - Give a high-level overview of the background of abstract's topic
-    - Briefly define any specialized jargon when first mentioned
-    - Maintain the core meaning and relationships between concepts
-    - Organize information in a logical flow
-  <|im_end|>
-  <|im_start|>user
+rewrite_prompt: |
+  You are a domain expert assisting a researcher. Your task is to take a user's query and expand it into a single, comprehensive, and detailed search query. This new query should be optimized for a semantic search against a scientific paper database.
+
+  Original User Query: "{query}"
+
+  Analyze the original query's intent and enrich it by incorporating the following aspects:
+  - **Elaboration:** Add relevant technical terms, standard methodologies, or specific concepts associated with the user's query.
+  - **Context and Scope:** Define a more precise scope. For example, specify if the focus should be on recent advancements, theoretical foundations, practical applications, or comparative analyses.
+  - **Objective or Goal:** Weave in the underlying purpose or problem that research in this area aims to solve (e.g., "to improve computational efficiency," "to reduce model hallucinations," "for therapeutic applications").
+
+  The final output must be a single, cohesive, and significantly more descriptive query string. Do not explain your reasoning.
+
+  Respond ONLY with the single expanded query.
+
+simplify_prompt: |
+  You are an expert science communicator. Your task is to explain the following technical abstract to an intelligent, non-expert audience (e.g., an undergraduate student or a professional from an adjacent field).
+
+  Your explanation must follow these rules:
+  1.  **Start with the Core Idea:** Begin with a high-level summary of the paper's primary goal and its main finding.
+  2.  **Define as You Go:** Clearly define essential technical terms and jargon the first time they appear.
+  3.  **Preserve Accuracy:** Maintain all key concepts and their relationships from the original text without oversimplifying to the point of being incorrect.
+  4.  **Use Accessible Language:** Use clear language and helpful analogies where appropriate, but do not sacrifice technical accuracy.
+  5.  **Maintain Logical Flow:** Structure the explanation logically, moving from the background and problem to the methods and conclusion.
+
+  Explain this abstract:
   {abstract}
-  <|im_end|>
-  <|im_start|>assistant
 
 final_prompt: |
-  Consider these query perspectives: {rewrites}
+  You are a research analyst. Your task is to synthesize the provided context to answer the user's query.
 
-  Answer {query} using context:
+  Original User Query: "{query}"
 
+  Enhanced Query Perspective:
+  {rewrite}
+
+  Context from Retrieved Papers (includes title, year, and abstract):
   {context}
 
-  Guidelines:
-  1. Resolve ambiguities using multiple query versions
-  2. Weight recent papers higher
-  3. Cross-validate findings across query variants
-  4. Summarize across query variants
+  Your instructions:
+  1.  **Synthesize, Don't Just List**: Do not summarize each paper individually. Integrate the findings from all provided abstracts into a single, cohesive paragraph.
+  2.  **Prioritize Recency**: The context includes the publication year for each paper. You MUST give more weight to the findings from the most recent papers. If findings conflict, mention that newer research suggests a different conclusion.
+  3.  **Address the Core Question**: Your entire response should focus on directly answering the original user query. Use the enhanced perspective to ensure a comprehensive answer.
+  4.  **Identify Consensus**: Your synthesis should highlight the core findings or conclusions that are consistent across multiple papers.
+
+  Generate a single, dense paragraph as the final answer.
+
+

@@ -1,9 +1,14 @@
+"""
+Data Download, Filtering, Chunking, and Embedding Pipeline
+"""
+
+
 import os
 import numpy as np
 import yaml
 from dotenv import load_dotenv
 
-from src.loaders.data_loader import download, filter_abstracts
+from src.loaders.download import download, filter_abstracts
 from src.loaders.embedding import chunk_texts_with_index, embed_chunks
 from src.connections.pinecone_db import pinecone_upload
 

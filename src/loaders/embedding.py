@@ -1,3 +1,7 @@
+"""
+Chunking and embedding of text data
+"""
+
 from fastembed import TextEmbedding
 import onnxruntime as ort
 import numpy as np
@@ -5,6 +9,9 @@ import os
 import pandas as pd
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from tqdm import tqdm
+from src.connections.logger import get_shared_logger
+
+logger = get_shared_logger(__name__)
 
 
 def chunk_texts_with_index(
@@ -13,7 +20,7 @@ def chunk_texts_with_index(
     """
     Chunk the abstracts in the dataframe and save the chunks to a pickle file.
     """
-    print("CHUNKING START!")
+    logger.info("Creating Chunks")
     # Create a text splitter that splits text into chunks
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,

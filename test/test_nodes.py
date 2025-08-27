@@ -5,8 +5,8 @@ Tests for RAG graph node functions.
 from typing import cast
 from unittest.mock import Mock, patch
 import pandas as pd
-from src.core.state import RAGState
-from src.core.nodes import (
+from src.rag.state import RAGState
+from src.rag.nodes import (
     create_classify_node,
     create_rewrite_node,
     create_retrieve_node,

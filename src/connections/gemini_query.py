@@ -1,24 +1,17 @@
+"""
+Gemini API Client
+"""
+
 from typing import Any
-import google.generativeai as genai
+from google import genai
 import dotenv
 import os
-from utils.logger import get_logger
+from src.connections.logger import get_shared_logger
 
-logger = get_logger(__name__)
-
-
-def _configure_gemini(api_key: str) -> None:
-    """
-    Configure the Gemini API with the provided API key.
-
-    Args:
-        api_key (str): Gemini API key
-    """
-    genai.configure(api_key=api_key)  # type: ignore
-    logger.info("Gemini API configured.")
+logger = get_shared_logger(__name__)
 
 
-def setup_gemini(api_key: str, model_name: str = "gemini-2.0-flash") -> Any:
+def setup_gemini(model_name: str = "gemini-2.0-flash") -> Any:
     """
     Set up the Gemini generative model.
 
@@ -29,8 +22,14 @@ def setup_gemini(api_key: str, model_name: str = "gemini-2.0-flash") -> Any:
     Returns:
         Any: Gemini GenerativeModel instance
     """
-    _configure_gemini(api_key)
-    model = genai.GenerativeModel(model_name)  # type: ignore
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        logger.error("GEMINI_API_KEY not found in environment variables.")
+        exit(1)
+    
+    genai.configure(api_key=api_key)
+
+    model = genai.GenerativeModel(model_name)
     logger.info(f"Gemini model '{model_name}' initialized.")
     return model
 
@@ -70,4 +69,4 @@ if __name__ == "__main__":
     # Example query
     prompt = "What is the capital of France?"
     result = query_gemini(model, prompt)
-    print(result)
+    logger.info(f"Prompt: {prompt}\nResponse: {result}")

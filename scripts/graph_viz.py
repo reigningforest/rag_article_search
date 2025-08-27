@@ -10,7 +10,7 @@ import torch
 from dotenv import load_dotenv
 from langchain_core.runnables.graph import MermaidDrawMethod
 from src.models import load_all_components
-from src.core import build_rag_graph
+from src.rag import build_rag_graph
 
 
 def visualize_graph(graph, output_path: str, overwrite: bool = False) -> bool:

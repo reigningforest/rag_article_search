@@ -4,14 +4,16 @@ RAG Graph builder for the LangGraph workflow.
 
 from langgraph.graph import StateGraph, START, END
 from .state import RAGState
-from .nodes import (
+from .nodes.classification import (
     create_classify_node,
-    create_rewrite_node,
-    create_retrieve_node,
-    create_simplify_abstracts_node,
+    route_based_on_classification,
+)
+from .nodes.retrieval import create_retrieve_node
+from .nodes.rewrite import create_rewrite_node
+from .nodes.simplify import create_simplify_abstracts_node
+from .nodes.response_generation import (
     create_generate_response_node,
     create_direct_response_node,
-    route_based_on_classification,
 )
 
 
@@ -34,7 +36,7 @@ def build_rag_graph(splits, index, gemini_llm, embedder, config, gemini_model):
     classification_prompt = config["classification_prompt"]
     rewrite_prompt = config["rewrite_prompt"]
     final_prompt = config["final_prompt"]
-    simplifier_prompt = config["hugging_face_template"]
+    simplifier_prompt = config["simplify_prompt"]
     top_k = config["top_k"]
 
     # Create node functions
@@ -66,9 +68,9 @@ def build_rag_graph(splits, index, gemini_llm, embedder, config, gemini_model):
         {"rewrite_query": "rewrite_query", "direct_answer": "direct_answer"},
     )
     workflow.add_edge("rewrite_query", "retrieve")
-    workflow.add_edge("retrieve", "simplify_abstracts")
-    workflow.add_edge("simplify_abstracts", "generate_rag_response")
-    workflow.add_edge("generate_rag_response", END)
+    workflow.add_edge("retrieve", "generate_rag_response")
+    workflow.add_edge("generate_rag_response", "simplify_abstracts")
+    workflow.add_edge("simplify_abstracts", END)
     workflow.add_edge("direct_answer", END)
 
     # Compile the graph
