@@ -94,14 +94,14 @@ def main():
 
     print("Loading components...")
     # Load all components
-    splits, index, gemini_llm, embedder, gemini_model = load_all_components(
-        config, data_dir, device, gemini_api_key
+    splits, index, client, embedder = load_all_components(
+        config, data_dir, device
     )
 
     print("Building RAG graph...")
     # Build the RAG graph
     rag_graph = build_rag_graph(
-        splits, index, gemini_llm, embedder, config, gemini_model
+        splits, index, client, embedder, config
     )
 
     # Visualize the graph

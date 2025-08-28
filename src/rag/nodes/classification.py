@@ -5,10 +5,10 @@ Classification and routing functions for the RAG workflow.
 from typing import Dict, Any, Literal
 
 from ..state import RAGState
-from ...connections.gemini_query import query_gemini
+from ...connections.gemini_query import query_client
 
 
-def create_classify_node(gemini_model, classification_prompt: str):
+def create_classify_node(client: Any, classification_prompt: str, model: str):
     """Create a classification node function using Gemini."""
 
     def classify_node(state: RAGState) -> Dict[str, Any]:
@@ -24,7 +24,7 @@ def create_classify_node(gemini_model, classification_prompt: str):
         formatted_prompt = classification_prompt.format(query=query)
 
         # Query Gemini directly
-        content = query_gemini(gemini_model, formatted_prompt).lower().strip()
+        content = query_client(client, formatted_prompt, model).lower().strip()
         needs_arxiv = content == "yes"
 
         print(f"Classification result: {needs_arxiv}")

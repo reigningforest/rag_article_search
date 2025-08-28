@@ -6,16 +6,16 @@ from typing import Dict, Any
 from tqdm import tqdm
 
 from ..state import RAGState
-from ...connections.gemini_query import query_gemini
+from ...connections.gemini_query import query_client
 from ...connections.logger import get_shared_logger
 
 logger = get_shared_logger(__name__)
 
 
-def create_simplify_abstracts_node(gemini_model, simplifier_prompt: str):
+def create_simplify_node(client: Any, simplifier_prompt: str, model: str):
     """Create an abstract simplification node function using Gemini."""
 
-    def simplify_abstracts_node(state: RAGState) -> Dict[str, Any]:
+    def simplify_node(state: RAGState) -> Dict[str, Any]:
         documents = state["documents"]
 
         # Call progress callback at START of node
@@ -30,7 +30,7 @@ def create_simplify_abstracts_node(gemini_model, simplifier_prompt: str):
             formatted_prompt = simplifier_prompt.format(abstract=doc["text"])
 
             # Get simplified version of the abstract using Gemini
-            simplified_text = query_gemini(gemini_model, formatted_prompt)
+            simplified_text = query_client(client, formatted_prompt, model)
 
             # Create a new document that contains both original and simplified text
             enhanced_doc = doc.copy()
@@ -48,4 +48,4 @@ def create_simplify_abstracts_node(gemini_model, simplifier_prompt: str):
             "last_completed_step": "simplify_abstracts",
         }
 
-    return simplify_abstracts_node
+    return simplify_node

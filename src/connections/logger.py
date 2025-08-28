@@ -9,10 +9,14 @@ import datetime
 
 # Configure the root logger
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[logging.StreamHandler(sys.stdout)],
 )
+
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("google_genai").setLevel(logging.INFO)
 
 def get_shared_logger(name: str = "", dirname: str = "log", filename: str = "log") -> logging.Logger:
     """

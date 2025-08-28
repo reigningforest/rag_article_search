@@ -5,10 +5,10 @@ Response generation functions for the RAG workflow.
 from typing import Dict, Any
 
 from ..state import RAGState
-from ...connections.gemini_query import query_gemini
+from ...connections.gemini_query import query_client
 
 
-def create_generate_response_node(gemini_model, final_prompt: str):
+def create_generate_response_node(client: Any, final_prompt: str, model: str):
     """Create a RAG response generation node function using Gemini."""
 
     def generate_response_node(state: RAGState) -> Dict[str, Any]:
@@ -34,7 +34,7 @@ def create_generate_response_node(gemini_model, final_prompt: str):
         )
 
         # Query Gemini directly
-        response = query_gemini(gemini_model, formatted_prompt)
+        response = query_client(client, formatted_prompt, model)
 
         return {
             "response": response,
@@ -45,7 +45,7 @@ def create_generate_response_node(gemini_model, final_prompt: str):
     return generate_response_node
 
 
-def create_direct_response_node(gemini_model):
+def create_direct_response_node(client: Any, model: str):
     """Create a direct response node function (without ArXiv) using Gemini."""
 
     def direct_response_node(state: RAGState) -> Dict[str, Any]:
@@ -58,7 +58,7 @@ def create_direct_response_node(gemini_model):
         print(f"Generating direct response for: {query}")
 
         # Query Gemini directly
-        response = query_gemini(gemini_model, query)
+        response = query_client(client, query, model)
 
         return {
             "response": response,

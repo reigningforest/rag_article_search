@@ -5,11 +5,14 @@ Query processing and rewriting functions for the RAG workflow.
 from typing import Dict, Any
 
 from ..state import RAGState
-from ...connections.gemini_query import query_gemini
+from ...connections.gemini_query import query_client
 
 
-def create_rewrite_node(gemini_model, rewrite_prompt: str):
-    """Create a query rewrite node function using Gemini."""
+def create_rewrite_node(client: Any, rewrite_prompt: str, model: str):
+    """
+    Create a query rewrite node function
+    
+    """
 
     def rewrite_node(state: RAGState) -> Dict[str, Any]:
         query = state["query"]
@@ -24,7 +27,7 @@ def create_rewrite_node(gemini_model, rewrite_prompt: str):
         formatted_prompt = rewrite_prompt.format(query=query)
 
         # Query Gemini directly
-        rewrite = query_gemini(gemini_model, formatted_prompt)
+        rewrite = query_client(client, formatted_prompt, model)
 
         print(f"Generated query rewrite: {rewrite}")
 

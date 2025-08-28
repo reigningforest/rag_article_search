@@ -10,24 +10,23 @@ from .nodes.classification import (
 )
 from .nodes.retrieval import create_retrieve_node
 from .nodes.rewrite import create_rewrite_node
-from .nodes.simplify import create_simplify_abstracts_node
+from .nodes.simplify import create_simplify_node
 from .nodes.response_generation import (
     create_generate_response_node,
     create_direct_response_node,
 )
 
 
-def build_rag_graph(splits, index, gemini_llm, embedder, config, gemini_model):
+def build_rag_graph(splits, index, client, embedder, config):
     """
     Build the RAG graph for the LangGraph system.
 
     Args:
         splits: Data splits DataFrame
         index: Pinecone index
-        gemini_llm: Gemini model for main LLM operations
+        client: Gemini client
         embedder: Embedding model
         config: Configuration dictionary
-        gemini_model: Gemini model for abstract simplification
 
     Returns:
         Compiled LangGraph workflow
@@ -38,16 +37,17 @@ def build_rag_graph(splits, index, gemini_llm, embedder, config, gemini_model):
     final_prompt = config["final_prompt"]
     simplifier_prompt = config["simplify_prompt"]
     top_k = config["top_k"]
+    model = config["gemini_model_name"]
 
     # Create node functions
-    classify_node = create_classify_node(gemini_llm, classification_prompt)
-    rewrite_node = create_rewrite_node(gemini_llm, rewrite_prompt)
+    classify_node = create_classify_node(client, classification_prompt, model)
+    rewrite_node = create_rewrite_node(client, rewrite_prompt, model)
     retrieve_node = create_retrieve_node(splits, index, embedder, top_k)
-    simplify_abstracts_node = create_simplify_abstracts_node(
-        gemini_model, simplifier_prompt
+    simplify_abstracts_node = create_simplify_node(
+        client, simplifier_prompt, model
     )
-    generate_response_node = create_generate_response_node(gemini_llm, final_prompt)
-    direct_response_node = create_direct_response_node(gemini_llm)
+    generate_response_node = create_generate_response_node(client, final_prompt, model)
+    direct_response_node = create_direct_response_node(client, model)
 
     # Create the StateGraph
     workflow = StateGraph(RAGState)

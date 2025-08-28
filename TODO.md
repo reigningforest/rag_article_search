@@ -10,3 +10,4 @@
 9. Hyde Rewriting
 10. Insert footnotes for citations.
 11. Turn chunking off.
+12. Convert to more class based system

@@ -109,13 +109,13 @@ def initialize_rag_system():
 
         # Load components
         data_dir = config["data_dir"]
-        splits, index, gemini_llm, embedder, gemini_model = load_all_components(
-            config, data_dir, device, gemini_api_key
+        splits, index, client, embedder = load_all_components(
+            config, data_dir, device
         )
 
         # Build RAG graph
         rag_graph = build_rag_graph(
-            splits, index, gemini_llm, embedder, config, gemini_model
+            splits, index, client, embedder, config
         )
 
         return rag_graph
@@ -182,14 +182,14 @@ def initialize_rag_system_with_progress():
             time.sleep(0.5)  # Simulate loading time
 
             update_progress(steps[6]["name"], steps[6]["progress"])
-            splits, index, gemini_llm, embedder, gemini_model = load_all_components(
-                config, data_dir, device, gemini_api_key
+            splits, index, client, embedder = load_all_components(
+                config, data_dir, device
             )
 
             # Step 9: Build graph
             update_progress(steps[7]["name"], steps[7]["progress"])
             rag_graph = build_rag_graph(
-                splits, index, gemini_llm, embedder, config, gemini_model
+                splits, index, client, embedder, config
             )
 
             # Final step

@@ -11,12 +11,11 @@ from src.connections.logger import get_shared_logger
 logger = get_shared_logger(__name__)
 
 
-def setup_gemini(model_name: str = "gemini-2.0-flash") -> Any:
+def setup_client() -> Any:
     """
     Set up the Gemini generative model.
 
     Args:
-        api_key (str): Gemini API key
         model_name (str): Name of the Gemini model to use
 
     Returns:
@@ -27,46 +26,55 @@ def setup_gemini(model_name: str = "gemini-2.0-flash") -> Any:
         logger.error("GEMINI_API_KEY not found in environment variables.")
         exit(1)
     
-    genai.configure(api_key=api_key)
+    # For google-genai, set the API key directly
+    client = genai.Client(api_key=api_key)
 
-    model = genai.GenerativeModel(model_name)
-    logger.info(f"Gemini model '{model_name}' initialized.")
-    return model
+    logger.info("LLM Client Loaded")
+
+    return client
 
 
-def query_gemini(model: Any, prompt: str) -> str:
+def query_client(client: Any, prompt: str, model_name: str = "gemini-2.0-flash") -> str:
     """
-    Query the Gemini model with a prompt.
+    Query a Gemini Model with a prompt.
 
     Args:
-        model (Any): Gemini GenerativeModel instance
+        client (Any): Gemini Client object
         prompt (str): Prompt to send to the model
+        model_name (str): Gemini Model to use
 
     Returns:
         str: Model response text or error message
     """
     try:
-        response = model.generate_content(prompt)
-        logger.info("Gemini query successful.")
+
+        logger.debug(f"Querying {model_name}")
+
+        response = client.models.generate_content(
+            model=model_name,
+            contents=prompt)
+        
+        usage = response.usage_metadata
+        prompt_token_count = usage.prompt_token_count if usage else None
+        candidates_token_count = usage.candidates_token_count if usage else None
+
+        logger.debug(f"Prompt token count: {prompt_token_count}")
+        logger.debug(f"Output token count: {candidates_token_count}")
+
         return response.text
     except Exception as e:
-        logger.error(f"Error querying Gemini: {str(e)}")
-        return f"Error querying Gemini: {str(e)}"
+        logger.error(f"Error querying: {str(e)}")
+        return f"Error querying: {str(e)}"
 
 
 if __name__ == "__main__":
     # Load environment variables from .env file
     dotenv.load_dotenv()
 
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-    if not GEMINI_API_KEY:
-        logger.error("GEMINI_API_KEY not found in environment variables.")
-        exit(1)
-
-    # Initialize the model
-    model = setup_gemini(GEMINI_API_KEY)
+    # Initialize the client
+    client = setup_client()
 
     # Example query
     prompt = "What is the capital of France?"
-    result = query_gemini(model, prompt)
+    result = query_client(client, prompt)
     logger.info(f"Prompt: {prompt}\nResponse: {result}")

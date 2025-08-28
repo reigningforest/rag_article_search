@@ -39,13 +39,13 @@ def main():
         logger.info(f"IMPORTANT! Using device: {device}")
 
     # Load all components
-    splits, index, gemini_llm, embedder, gemini_model = load_all_components(
-        config, data_dir, device, gemini_api_key
+    splits, index, client, embedder = load_all_components(
+        config, data_dir, device
     )
 
     # Build the RAG graph
     rag_graph = build_rag_graph(
-        splits, index, gemini_llm, embedder, config, gemini_model
+        splits, index, client, embedder, config
     )
 
     logger.info("LangGraph RAG System initialized")
@@ -69,6 +69,7 @@ def main():
             "simplified_documents": [],
             "response": "",
             "current_step": "initialized",
+            "progress_callback": None,
         }
 
         # Execute the graph with the query
