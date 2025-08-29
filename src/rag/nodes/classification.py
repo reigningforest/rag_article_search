@@ -26,10 +26,19 @@ def create_classify_node(client: Any, classification_prompt: str, model: str):
         formatted_prompt = classification_prompt.format(query=query)
 
         # Query Gemini directly
-        content = query_client(client, formatted_prompt, model).lower().strip()
-        needs_arxiv = content == "yes"
+        response = query_client(client, formatted_prompt, model).strip()
+        
+        # Parse "YES/NO - reason" format
+        if " - " in response:
+            decision, reasoning = response.split(" - ", 1)
+        else:
+            decision = response
+            reasoning = "No reasoning provided"
+        
+        needs_arxiv = decision.lower() == "yes"
 
         logger.info(f"Classification result: {needs_arxiv}")
+        logger.info(f"Classification reasoning: {reasoning}")
 
         return {
             "needs_arxiv": needs_arxiv,

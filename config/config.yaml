@@ -56,7 +56,6 @@ classification_prompt: |
   Based on the query's intent, decide if a search is needed.
 
   Answer YES if the query's intent matches any of these principles:
-  - **
   - **Recency-focused**: It explicitly asks for recent, current, or state-of-the-art information (e.g., "latest developments," "recent breakthroughs,").
   - **Evolving Topics**: It is about a rapidly advancing field where new findings are constant (e.g., generative AI, LLM fine-tuning, CRISPR gene editing).
   - **Modern Comparison**: It asks how a topic has changed or evolved into the modern era (e.g., "how has X improved since 2021?").
@@ -67,24 +66,29 @@ classification_prompt: |
 
   If the intent is ambiguous or does not clearly fit the YES criteria, default to NO.
 
-  Respond with ONLY the word YES or NO.
+  Respond with the word YES/NO followed by a brief explanation of your reasoning in the following format:
+  YES/NO - [brief explanation]
 
 rewrite_prompt: |
-  You are a domain expert assisting a researcher. Your task is to take a user's query and expand it into a single, comprehensive, and detailed search query. This new query should be optimized for a semantic search against a scientific paper database.
+  You are an expert researcher skilled at creating focused and accurate queries for scientific document retrieval.
 
-  Original User Query: "{query}"
+  Given the following user query, generate an enhanced query passage that includes relevant general technical terminology and concepts to improve retrieval.
 
-  Analyze the original query's intent and enrich it by incorporating the following aspects:
-  - **Elaboration:** Add relevant technical terms, standard methodologies, or specific concepts associated with the user's query.
-  - **Context and Scope:** Define a more precise scope. For example, specify if the focus should be on recent advancements, theoretical foundations, practical applications, or comparative analyses.
-  - **Objective or Goal:** Weave in the underlying purpose or problem that research in this area aims to solve (e.g., "to improve computational efficiency," "to reduce model hallucinations," "for therapeutic applications").
+  User Query: "{query}"
 
-  The final output must be a single, cohesive, and significantly more descriptive query string. Do not explain your reasoning.
+  The enhanced query should:
+  - Be approximately 150-200 words long
+  - Use clear and accurate scientific language without unnecessary jargon
+  - Capture core concepts, methodologies, and key themes related to the subject
+  - Avoid overly narrow or highly specialized terms
+  - Emphasize terminology that would appear broadly in scientific literature related to the topic
 
-  Respond ONLY with the single expanded query.
+  Output the enhanced query passage only, without additional explanations or context.
 
 simplify_prompt: |
   You are an expert science communicator. Your task is to explain the following technical abstract to an intelligent, non-expert audience (e.g., an undergraduate student or a professional from an adjacent field).
+
+  Explain this abstract: {abstract}
 
   Your explanation must follow these rules:
   1.  **Start with the Core Idea:** Begin with a high-level summary of the paper's primary goal and its main finding.
@@ -93,8 +97,6 @@ simplify_prompt: |
   4.  **Use Accessible Language:** Use clear language and helpful analogies where appropriate, but do not sacrifice technical accuracy.
   5.  **Maintain Logical Flow:** Structure the explanation logically, moving from the background and problem to the methods and conclusion.
 
-  Explain this abstract:
-  {abstract}
 
 final_prompt: |
   You are a research analyst. Your task is to synthesize the provided context to answer the user's query.

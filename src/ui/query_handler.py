@@ -41,7 +41,7 @@ def query_rag_system_with_progress(rag_graph, query, progress_bar, status_text):
         # Progress mapping using simple tuples - showing current activity
         progress_steps = {
             "classify": (15, "🧠 Analyzing query..."),
-            "rewrite_query": (35, "📝 Generating query variations..."),
+            "rewrite_query": (35, "� Generating hypothetical document..."),
             "retrieve": (55, "🔍 Retrieving relevant documents..."),
             "generate_rag_response": (75, "🤖 Generating response..."),
             "simplify_abstracts": (95, "✨ Simplifying abstracts..."),

@@ -21,14 +21,14 @@ def create_retrieve_node(splits, index, embedder, top_k: int):
         if "progress_callback" in state and callable(state["progress_callback"]):
             state["progress_callback"]("retrieve")
 
-        logger.info("Retrieving documents for concatenated query and rewrite")
+        logger.info("Retrieving documents using HyDE document")
 
-        # Concatenate query with rewrite
-        concatenated_query = query + " " + rewrite
-        logger.debug(f"Concatenated query: {concatenated_query}")
+        # Use the rewrite (which is now a HyDE document) for embedding
+        search_text = rewrite
+        logger.debug(f"HyDE document: {search_text[:200]}...")
 
-        # Generate a single embedding for the concatenated query
-        query_vector = embedder.embed_query(concatenated_query)
+        # Generate a single embedding for the HyDE document
+        query_vector = embedder.embed_query(search_text)
 
         # Retrieve documents for the concatenated query
         results = index.query(vector=query_vector, top_k=top_k, include_metadata=False)
