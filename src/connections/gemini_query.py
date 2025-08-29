@@ -6,7 +6,7 @@ from typing import Any
 from google import genai
 import dotenv
 import os
-from src.connections.logger import get_shared_logger
+from src.connections import get_shared_logger
 
 logger = get_shared_logger(__name__)
 

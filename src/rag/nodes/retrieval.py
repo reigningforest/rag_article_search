@@ -5,6 +5,9 @@ Document retrieval functions for the RAG workflow.
 from typing import Dict, Any
 
 from ..state import RAGState
+from ...connections import get_shared_logger
+
+logger = get_shared_logger(__name__)
 
 
 def create_retrieve_node(splits, index, embedder, top_k: int):
@@ -18,11 +21,11 @@ def create_retrieve_node(splits, index, embedder, top_k: int):
         if "progress_callback" in state and callable(state["progress_callback"]):
             state["progress_callback"]("retrieve")
 
-        print("Retrieving documents for concatenated query and rewrite")
+        logger.info("Retrieving documents for concatenated query and rewrite")
 
         # Concatenate query with rewrite
         concatenated_query = query + " " + rewrite
-        print(f"Concatenated query: {concatenated_query}")
+        logger.debug(f"Concatenated query: {concatenated_query}")
 
         # Generate a single embedding for the concatenated query
         query_vector = embedder.embed_query(concatenated_query)
@@ -46,7 +49,10 @@ def create_retrieve_node(splits, index, embedder, top_k: int):
             }
             documents.append(doc)
 
-        print(f"Retrieved {len(documents)} documents")
+        logger.info(f"Retrieved {len(documents)} documents")
+
+        for i in range(len(documents)):
+            logger.debug(f"Document {i}: {documents[i]}")
 
         return {
             "documents": documents,

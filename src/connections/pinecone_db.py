@@ -5,7 +5,7 @@ Pinecone vector database connection and operations
 import numpy as np
 from pinecone import Pinecone, ServerlessSpec, Vector
 from tqdm import tqdm
-from src.connections.logger import get_shared_logger
+from src.connections import get_shared_logger
 
 logger = get_shared_logger(__name__)
 

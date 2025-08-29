@@ -8,8 +8,8 @@ import torch
 from dotenv import load_dotenv
 
 from src.models import load_all_components
-from src.rag import build_rag_graph
-from src.connections.logger import get_shared_logger
+from src.rag import build_rag_graph, RAGState
+from src.connections import get_shared_logger
 
 logger = get_shared_logger(__name__)
 
@@ -21,7 +21,7 @@ def main():
         config = yaml.safe_load(file)
 
     # Load the environment variables
-    load_dotenv(dotenv_path=config["env_file"])
+    load_dotenv()
 
     # Load directories
     data_dir = config["data_dir"]
@@ -61,7 +61,7 @@ def main():
             break
 
         # Initialize state
-        initial_state = {
+        initial_state: RAGState = {
             "query": query_str,
             "needs_arxiv": False,
             "rewrite": "",
@@ -70,23 +70,26 @@ def main():
             "response": "",
             "current_step": "initialized",
             "progress_callback": None,
+            "selected_for_simplification": [],
+            "continue_simplification": False,
         }
 
         # Execute the graph with the query
         try:
-            # Get the final result
+            # Execute the graph - it will pause at simplify_abstracts for user input
             result = rag_graph.invoke(initial_state)
 
-            # Log the response
+            # Display the main response
             logger.info(f"\nResponse: {result['response']}")
 
-            # Log the simplified documents
-            logger.info("SIMPLIFIED SOURCE DOCUMENTS:")
-            for i, doc in enumerate(result["simplified_documents"], 0):
-                logger.info(f"\n---- Document {i+1} ----")
-                logger.info(f"Title: {doc['title']}")
-                logger.info(f"Date: {doc['date']}")
-                logger.info(f"Simplified Abstract: {doc['text']}")
+            # Log the simplified documents if any were created
+            if result.get("simplified_documents"):
+                logger.info("SIMPLIFIED SOURCE DOCUMENTS:")
+                for i, doc in enumerate(result["simplified_documents"], 0):
+                    logger.info(f"\n---- Document {i+1} ----")
+                    logger.info(f"Title: {doc.get('title', 'No title')}")
+                    logger.info(f"Date: {doc.get('date', 'No date')}")
+                    logger.info(f"Simplified Abstract: {doc['text']}")
 
         except Exception as e:
             logger.error(f"Error during execution: {e}")

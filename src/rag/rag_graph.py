@@ -2,6 +2,7 @@
 RAG Graph builder for the LangGraph workflow.
 """
 
+from typing import Any
 from langgraph.graph import StateGraph, START, END
 from .state import RAGState
 from .nodes.classification import (
@@ -17,7 +18,7 @@ from .nodes.response_generation import (
 )
 
 
-def build_rag_graph(splits, index, client, embedder, config):
+def build_rag_graph(splits: Any, index: Any, client: Any, embedder: Any, config: dict):
     """
     Build the RAG graph for the LangGraph system.
 
@@ -70,7 +71,11 @@ def build_rag_graph(splits, index, client, embedder, config):
     workflow.add_edge("rewrite_query", "retrieve")
     workflow.add_edge("retrieve", "generate_rag_response")
     workflow.add_edge("generate_rag_response", "simplify_abstracts")
-    workflow.add_edge("simplify_abstracts", END)
+    workflow.add_conditional_edges(
+        "simplify_abstracts",
+        lambda state: "continue" if state.get("continue_simplification") else "done",
+        {"continue": "simplify_abstracts", "done": END},
+    )
     workflow.add_edge("direct_answer", END)
 
     # Compile the graph

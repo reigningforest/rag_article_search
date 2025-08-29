@@ -5,7 +5,9 @@ Response generation functions for the RAG workflow.
 from typing import Dict, Any
 
 from ..state import RAGState
-from ...connections.gemini_query import query_client
+from ...connections import query_client, get_shared_logger
+
+logger = get_shared_logger(__name__)
 
 
 def create_generate_response_node(client: Any, final_prompt: str, model: str):
@@ -20,7 +22,7 @@ def create_generate_response_node(client: Any, final_prompt: str, model: str):
         if "progress_callback" in state and callable(state["progress_callback"]):
             state["progress_callback"]("generate_rag_response")
 
-        print(f"Generating RAG response using {len(documents)} documents")
+        logger.info(f"Generating RAG response using {len(documents)} documents")
 
         # Format documents
         formatted_docs = "\n\n".join(
@@ -55,10 +57,12 @@ def create_direct_response_node(client: Any, model: str):
         if "progress_callback" in state and callable(state["progress_callback"]):
             state["progress_callback"]("direct_answer")
 
-        print(f"Generating direct response for: {query}")
+        logger.info(f"Generating direct response for: {query}")
 
         # Query Gemini directly
         response = query_client(client, query, model)
+
+        # logger.debug(f"Generated direct response: {response}")
 
         return {
             "response": response,

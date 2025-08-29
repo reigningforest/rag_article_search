@@ -16,3 +16,5 @@ class RAGState(TypedDict):
     response: str
     current_step: str
     progress_callback: Optional[Callable[[str], None]]  # For progress updates
+    selected_for_simplification: List[int]
+    continue_simplification: bool
