@@ -28,13 +28,11 @@ def create_classify_node(client: Any, classification_prompt: str, model: str):
         # Query Gemini directly
         response = query_client(client, formatted_prompt, model).strip()
         
-        # Parse "YES/NO - reason" format
-        if " - " in response:
-            decision, reasoning = response.split(" - ", 1)
-        else:
-            decision = response
-            reasoning = "No reasoning provided"
-        
+        # Validate response format
+        if not (response.startswith(("YES", "NO")) and " - " in response):
+            raise ValueError(f"Invalid classification response: '{response}'. Expected format: 'YES/NO - reason'")
+        decision, reasoning = response.split(" - ", 1)        
+
         needs_arxiv = decision.lower() == "yes"
 
         logger.info(f"Classification result: {needs_arxiv}")
