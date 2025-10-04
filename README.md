@@ -86,6 +86,7 @@ This project provides a web-based interface for intelligent research paper searc
 - **💻 Multiple Entry Points**: Web UI, CLI, and programmatic access
 - **🤖 Agentic RAG**: Intelligent query processing and response generation
 - **☁️ Google Gemini Integration**: Powered by Google Gemini 2.0 Flash
+- **🧠 Fine-tuned Model**: SmolLM2 model for enhanced abstract simplification (GPU accelerated)
 - **🗃️ Vector Database**: Pinecone integration for semantic search
 - **📄 Simplified Abstracts**: AI-powered simplification of complex research papers
 - **⏱️ Real-time Progress**: Live progress tracking during processing
@@ -102,6 +103,8 @@ poetry install
 # OR
 pip install -r requirements.txt
 ```
+
+**GPU Support**: CUDA-compatible GPU recommended for optimal performance with fine-tuned model
 
 ## Environment Variables
 
@@ -142,5 +145,6 @@ result = main("Your research question here")
 - Click "Run Data Pipeline" in the web interface to download and process ArXiv data
 - Wait for processing to complete (may take several hours)
 - Then start asking questions about research papers!
+- **Model Selection**: Configure `use_finetuned: true/false` in `config/config.yaml` to switch between fine-tuned and Gemini models
 
 The system shows real-time progress and outputs both the main response and simplified source documents.
