@@ -7,9 +7,9 @@ import yaml
 import torch
 from dotenv import load_dotenv
 
-from src.models import load_all_components
-from src.rag import build_rag_graph, RAGState
-from src.connections import get_shared_logger
+from .models import load_all_components
+from .rag import build_rag_graph, RAGState
+from .connections import get_shared_logger
 
 logger = get_shared_logger(__name__)
 
@@ -39,13 +39,13 @@ def main():
         logger.info(f"IMPORTANT! Using device: {device}")
 
     # Load all components
-    splits, index, client, embedder = load_all_components(
+    splits, index, client, embedder, simplification_model, simplification_tokenizer = load_all_components(
         config, data_dir, device
     )
 
     # Build the RAG graph
     rag_graph = build_rag_graph(
-        splits, index, client, embedder, config
+        splits, index, client, embedder, config, simplification_model, simplification_tokenizer
     )
 
     logger.info("LangGraph RAG System initialized")

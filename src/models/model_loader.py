@@ -8,9 +8,12 @@ from pinecone import Pinecone
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.embeddings.cache import CacheBackedEmbeddings
 from langchain.storage import LocalFileStore
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from peft import PeftModel
 
 from ..connections.gemini_query import setup_client
-from src.connections.logger import get_shared_logger
+from ..connections.logger import get_shared_logger
 
 logger = get_shared_logger(__name__)
 
@@ -75,6 +78,62 @@ def load_data_and_index(config: dict, data_dir: str):
     return splits, index
 
 
+def load_simplification_model(config: dict, device: str):
+    """
+    Load the fine-tuned simplification model using PEFT.
+
+    Args:
+        config (dict): Configuration dictionary containing simplification_model settings
+        device (str): Device to load the model on
+
+    Returns:
+        tuple: (model, tokenizer) or (None, None) if loading fails
+    """
+    try:
+        simplification_config = config.get("simplification_model", {})
+        if not simplification_config.get("use_finetuned", False):
+            logger.info("Fine-tuned model disabled in config, skipping load")
+            return None, None
+
+        # Check device requirement
+        if device == "cpu":
+            logger.error("Fine-tuned simplification model requires GPU. CPU is not supported.")
+            logger.warning("Falling back to Gemini for simplification")
+            return None, None
+
+        base_model_name = simplification_config.get("base_model_name")
+        model_path = simplification_config.get("model_path", "models/")
+        
+        if not base_model_name:
+            logger.error("base_model_name not specified in config")
+            return None, None
+        
+        logger.info(f"Loading fine-tuned simplification model from: {model_path}")
+        logger.info(f"Base model: {base_model_name}")
+        
+        # Load base model and tokenizer
+        logger.info(f"Loading base model: {base_model_name}")
+        tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+        base_model = AutoModelForCausalLM.from_pretrained(
+            base_model_name,
+            torch_dtype=torch.float16,
+            device_map="auto",
+            trust_remote_code=True
+        )
+        
+        # Load PEFT adapter
+        logger.info(f"Loading PEFT adapter from: {model_path}")
+        model = PeftModel.from_pretrained(base_model, model_path)
+        
+        logger.info(f"Fine-tuned simplification model loaded successfully on {device}")
+        return model, tokenizer
+        
+    except Exception as e:
+        logger.error(f"Failed to load fine-tuned simplification model: {e}")
+        logger.warning("Falling back to Gemini for simplification")
+        return None, None
+
+
 def load_all_components(config: dict, data_dir: str, device: str):
     """
     Load all necessary components for the RAG system.
@@ -85,9 +144,9 @@ def load_all_components(config: dict, data_dir: str, device: str):
         device (str): Device to load models on
 
     Returns:
-        tuple: (splits, index, client, embedder)
+        tuple: (splits, index, client, embedder, simplification_model, simplification_tokenizer)
     """
-    logger.info("🚀 Starting component loading process...")
+    logger.info("Starting component loading process...")
 
     # Load data and index
     splits, index = load_data_and_index(config, data_dir)
@@ -98,5 +157,8 @@ def load_all_components(config: dict, data_dir: str, device: str):
     # Load embedder
     embedder = load_embedder(config, device)
 
-    logger.info("🎉 All components loaded successfully!")
-    return splits, index, client, embedder
+    # Load simplification model (optional)
+    simplification_model, simplification_tokenizer = load_simplification_model(config, device)
+
+    logger.info("All components loaded successfully!")
+    return splits, index, client, embedder, simplification_model, simplification_tokenizer

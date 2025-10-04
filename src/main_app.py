@@ -7,11 +7,11 @@ import streamlit as st
 from dotenv import load_dotenv
 
 # Import UI modules that reuse existing functions
-from src.ui.config import load_and_validate_config
-from src.ui.components import render_sidebar, render_header
-from src.ui.data_pipeline import handle_data_pipeline
-from src.ui.query_handler import handle_query_interface
-from src.ui.display import display_results
+from .ui.config import load_and_validate_config
+from .ui.components import render_sidebar, render_header
+from .ui.data_pipeline import handle_data_pipeline
+from .ui.query_handler import handle_query_interface
+from .ui.display import display_results
 
 
 def main():

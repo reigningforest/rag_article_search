@@ -18,7 +18,8 @@ from .nodes.response_generation import (
 )
 
 
-def build_rag_graph(splits: Any, index: Any, client: Any, embedder: Any, config: dict):
+def build_rag_graph(splits: Any, index: Any, client: Any, embedder: Any, config: dict, 
+                    simplification_model: Any = None, simplification_tokenizer: Any = None):
     """
     Build the RAG graph for the LangGraph system.
 
@@ -28,6 +29,8 @@ def build_rag_graph(splits: Any, index: Any, client: Any, embedder: Any, config:
         client: Gemini client
         embedder: Embedding model
         config: Configuration dictionary
+        simplification_model: Fine-tuned model (optional)
+        simplification_tokenizer: Fine-tuned tokenizer (optional)
 
     Returns:
         Compiled LangGraph workflow
@@ -45,7 +48,8 @@ def build_rag_graph(splits: Any, index: Any, client: Any, embedder: Any, config:
     rewrite_node = create_rewrite_node(client, rewrite_prompt, model)
     retrieve_node = create_retrieve_node(splits, index, embedder, top_k)
     simplify_abstracts_node = create_simplify_node(
-        client, simplifier_prompt, model
+        config, client=client, simplifier_prompt=simplifier_prompt, model=model,
+        simplification_model=simplification_model, simplification_tokenizer=simplification_tokenizer
     )
     generate_response_node = create_generate_response_node(client, final_prompt, model)
     direct_response_node = create_direct_response_node(client, model)

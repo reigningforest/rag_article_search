@@ -47,6 +47,18 @@ pc_region: "us-east-1"
 gemini_model_name: "gemini-2.0-flash"
 top_k: 10
 
+# Simplification Model Configuration
+simplification_model:
+  use_finetuned: true
+  base_model_name: "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+  model_path: "models/"
+  generation_params:
+    max_length: 1000
+    temperature: 0.7
+    do_sample: true
+    top_p: 0.9
+    pad_token_id: 2  # SmolLM2 EOS token
+
 
 classification_prompt: |
   You are a query classifier. Your task is to determine if a user's query requires searching for recent scientific papers (from 2022-2024).
@@ -56,12 +68,12 @@ classification_prompt: |
   Based on the query's intent, decide if a search is needed.
 
   Answer YES if the query's intent matches any of these principles:
-  - **Recency-focused**: It explicitly asks for recent, current, or state-of-the-art information (e.g., "latest developments," "recent breakthroughs,").
-  - **Evolving Topics**: It is about a rapidly advancing field where new findings are constant (e.g., generative AI, LLM fine-tuning, CRISPR gene editing).
+  - **Recency-focused**: It explicitly asks for recent, current, latest, or state-of-the-art information (e.g., "latest developments," "recent breakthroughs," "most recent").
+  - **Evolving Topics**: It is about a rapidly advancing field where new findings are constant (e.g., generative AI, LLM fine-tuning, CRISPR gene editing, COVID-19 research).
   - **Modern Comparison**: It asks how a topic has changed or evolved into the modern era (e.g., "how has X improved since 2021?").
 
   Answer NO if the query's intent matches any of these principles:
-  - **Historical**: It is historical, asking about origins, discoveries, or foundational concepts.
+  - **Historical**: It is historical, asking about origins, discoveries, or foundational concepts from the past.
   - **Fundamental**: It asks for a basic definition or a well-established principle that is unlikely to have changed recently (e.g., "what is gravity?").
 
   If the intent is ambiguous or does not clearly fit the YES criteria, default to NO.
