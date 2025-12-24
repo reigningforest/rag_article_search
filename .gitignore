@@ -5,6 +5,7 @@ models/
 *.pkl
 *.npy
 *.npz
+poetry.lock
 
 # models
 embedding_cache/

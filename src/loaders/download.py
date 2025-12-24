@@ -108,7 +108,6 @@ def _clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["update_date"] = pd.to_datetime(df["update_date"], errors="coerce")
     df["title"] = df["title"].astype(str).str.strip()
     return df
-    return df
 
 
 def filter_abstracts(

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rag-article-search"
-version = "0.1.0"
+version = "0.1.1"
 description = "An advanced Retrieval-Augmented Generation (RAG) system."
 authors = ["John He <johnhe@u.northwestern.edu>"]
 readme = "README.md"
@@ -23,7 +23,7 @@ langchain = ">=0.2.5"
 langchain-text-splitters = ">=0.2.1"
 langchain-huggingface = ">=0.0.3"
 langchain-pinecone = ">=0.1.1"
-langchain-core = ">=0.2.9"
+langchain-core = ">=0.3.81"
 pinecone = ">=5.0.0"
 langgraph = ">=0.1.0"
 pydantic = "^2.11.7"
