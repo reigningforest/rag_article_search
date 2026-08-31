@@ -5,7 +5,7 @@ models/
 *.pkl
 *.npy
 *.npz
-poetry.lock
+TODO.md
 
 # models
 embedding_cache/
