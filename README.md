@@ -99,9 +99,12 @@ git clone <repository-url>
 cd rag_article_search
 
 # Install dependencies
-poetry install
-# OR
-pip install -r requirements.txt
+# 1. Regenerate uv.lock and upgrade all packages to latest versions
+uv lock --upgrade
+# 2. Install/sync default dependencies (+ dev group) and remove extraneous packages
+uv sync
+# (Optional) Include the gpu dependency group when syncing
+uv sync --all-groups
 ```
 
 **GPU Support**: CUDA-compatible GPU recommended for optimal performance with fine-tuned model
